@@ -18,6 +18,7 @@ const DefaultKeystorePath = "./keys"
 const (
 	MultisigAccountKey = "multisigAccount"
 	SubAccountKey      = "subAccount"
+	PayerAccountKey    = "payerAccount"
 	ChainIdKey         = "chainId"
 	DenomKey           = "denom"
 	GasPriceKey        = "gasPrice"

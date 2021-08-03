@@ -43,21 +43,17 @@ var (
 
 func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*Connection, error) {
 	log.Info("NewConnection", "KeystorePath", cfg.KeystorePath, "Endpoint", cfg.Endpoint, "typesPath", cfg.Opts["typesPath"])
-
-	typesPath := cfg.Opts[config.TypesPathKey]
-	path, ok := typesPath.(string)
+	path, ok := cfg.Opts[config.TypesPathKey].(string)
 	if !ok {
 		return nil, errors.New("no typesPath")
 	}
 
-	adType := cfg.Opts[config.AddressTypeKey]
-	addressType, ok := adType.(string)
+	addressType, ok := cfg.Opts[config.AddressTypeKey].(string)
 	if !ok {
 		return nil, errors.New("addressType not ok")
 	}
 
-	subAccountInterface := cfg.Opts[config.SubAccountKey]
-	subAccount, ok := subAccountInterface.(string)
+	payerAccount, ok := cfg.Opts[config.PayerAccountKey].(string)
 	if !ok {
 		return nil, errors.New("addressType not ok")
 	}
@@ -67,7 +63,7 @@ func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*C
 		return nil, err
 	}
 
-	kp, err := keystore.KeypairFromAddress(subAccount, keystore.SubChain, cfg.KeystorePath, cfg.Insecure)
+	kp, err := keystore.KeypairFromAddress(payerAccount, keystore.SubChain, cfg.KeystorePath, cfg.Insecure)
 	if err != nil {
 		return nil, fmt.Errorf("keypairFromAddress err: %s", err)
 	}
