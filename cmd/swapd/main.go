@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"rtoken-swap/chains/cosmos"
+	"rtoken-swap/chains/substrate"
 
 	"rtoken-swap/chains/stafi"
 	"rtoken-swap/config"
@@ -47,10 +48,10 @@ var accountCommand = cli.Command{
 // init initializes CLI
 func init() {
 	app.Action = run
-	app.Copyright = "Copyright 2020 Stafi Protocol Authors"
-	app.Name = "rETH"
-	app.Usage = "reth"
-	app.Authors = []*cli.Author{{Name: "Stafi Protocol 2020"}}
+	app.Copyright = "Copyright 2021 Stafi Protocol Authors"
+	app.Name = "rtoken-swap"
+	app.Usage = "rtoken-swap"
+	app.Authors = []*cli.Author{{Name: "Stafi Protocol 2021"}}
 	app.Version = "0.0.1"
 	app.EnableBashCompletion = true
 	app.Commands = []*cli.Command{
@@ -128,6 +129,11 @@ func run(ctx *cli.Context) error {
 			if err != nil {
 				return err
 			}
+		case "polkdot", "kusama":
+			newChain, err = substrate.InitializeChain(chainConfig, logger, sysErr)
+			if err != nil {
+				return err
+			}
 		default:
 			return errors.New("unrecognized Chain Type")
 		}
@@ -136,6 +142,5 @@ func run(ctx *cli.Context) error {
 	}
 
 	c.Start()
-
 	return nil
 }

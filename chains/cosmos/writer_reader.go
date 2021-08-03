@@ -89,7 +89,16 @@ func (w *writer) processNewTransInfos(m *core.Message) bool {
 		w.printContentError(m, errors.New("msg cast to traninfo not ok"))
 		return false
 	}
-	//todo check block is deal
+	// check block is deal
+	isDeal, err := w.checkDeal(transInfoList.Block)
+	if err != nil {
+		w.log.Error("checkDeal failed", "err", err)
+		return false
+	}
+	if isDeal {
+		w.log.Info("block has deal ", "block", transInfoList.Block)
+		return true
+	}
 	poolClient := w.conn.GetPoolClient()
 	client := poolClient.GetRpcClient()
 	multisigAddr := w.conn.GetMultisigAddress()
