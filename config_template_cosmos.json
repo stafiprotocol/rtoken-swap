@@ -1,0 +1,31 @@
+{
+  "chains": [
+    {
+      "name": "stafi",
+      "rsymbol": "RFIS",
+      "endpoint": "ws://127.0.0.1:9944",
+      "keystorePath": "/Users/tpkeeper/gowork/stafi/rtoken-swap/keys",
+      "care": "RATOM",
+      "opts": {
+        "subAccount": "35arN8keEJhSeSnpyH9Cu6CBsmGchGgJi577CxHyPUuobUhg",
+        "typesPath": "/Users/tpkeeper/gowork/stafi/rtoken-swap/network/stafi.json",
+        "startBlock": "3700",
+        "addressType": "AccountId"
+      }
+    },
+    {
+      "name": "cosmos",
+      "rsymbol": "RATOM",
+      "endpoint": "http://127.0.0.1:26657",
+      "keystorePath": "/Users/tpkeeper/gowork/stafi/rtoken-swap/keys",
+      "opts": {
+        "multisigAccount": "key1key2key3",
+        "subAccount": "key1",
+        "threshold": "2",
+        "chainId": "my-chain",
+        "denom": "stake",
+        "gasPrice": "0.00005stake"
+      }
+    }
+  ]
+}
