@@ -184,7 +184,7 @@ func (w *writer) processNewTransInfos(m *core.Message) bool {
 	}
 
 	return w.checkAndSend(poolClient, txHash, txBts, transInfoList.Block)
-}
+} 
 
 func (w *writer) getSubmitSignature(symbol core.RSymbol, block uint64, proposalId []byte) ([][]byte, error) {
 	getSigsParam := submodel.GetSignaturesParam{

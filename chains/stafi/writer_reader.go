@@ -13,7 +13,7 @@ import (
 	subTypes "github.com/stafiprotocol/go-substrate-rpc-client/types"
 )
 
-const msgLimit = 1024
+const msgLimit = 4096
 
 type writer struct {
 	symbol          core.RSymbol

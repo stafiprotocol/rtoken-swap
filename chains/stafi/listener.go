@@ -139,21 +139,50 @@ func (l *listener) pollBlocks() error {
 }
 
 func (l *listener) processTransInfos(infos *submodel.TransInfoList) error {
-	//check transinfo is not deal
-	for _, transInfo := range infos.List {
-		if transInfo.IsDeal {
-			return fmt.Errorf("transInfo must not deal")
+
+	switch l.care {
+	case core.RATOM:
+		//check transinfo is not deal
+		for _, transInfo := range infos.List {
+			if transInfo.IsDeal {
+				return fmt.Errorf("transInfo must all not deal, symbol: %s block: %d", l.care, infos.Block)
+			}
 		}
+		msg := &core.Message{Destination: l.care, Reason: core.NewTransInfos, Content: infos}
+		return l.submitWriteMessage(msg)
+	case core.RDOT, core.RKSM:
+		needDeal := false
+		for i, transInfo := range infos.List {
+			if !transInfo.IsDeal {
+				needDeal = true
+				infoSingle := submodel.TransInfoSingle{
+					Block: infos.Block,
+					Index: uint32(i),
+					Info:  transInfo,
+				}
+				msg := &core.Message{Destination: l.care, Reason: core.NewTransInfoSingle, Content: &infoSingle}
+				err := l.submitWriteMessage(msg)
+				if err != nil {
+					return fmt.Errorf("submitWriteMessage %s", err)
+				}
+				//todo wait until pre is deal ,then continue to deal next
+			}
+		}
+		//if no need to deal, it should't happend here
+		if !needDeal {
+			return fmt.Errorf("transInfoList must has info that need deal, symbol:%s block:%d", l.care, infos.Block)
+		}
+		return nil
+	default:
+		return fmt.Errorf("unsupport care symbol: %s", l.care)
 	}
-	msg := &core.Message{Destination: l.care, Reason: core.NewTransInfos, Content: infos}
-	return l.submitWriteMessage(msg)
 }
 
 // submitMessage send msg to other chain
 func (l *listener) submitWriteMessage(m *core.Message) error {
 	m.Source = l.symbol
 	if m.Destination == "" {
-		m.Destination = m.Source
+		m.Destination = l.care
 	}
 	return l.router.SendWriteMesage(m)
 }

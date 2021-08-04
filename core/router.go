@@ -45,7 +45,7 @@ func (r *Router) SendWriteMesage(msg *Message) error {
 		return fmt.Errorf("unknown destination symbol: %s", msg.Destination)
 	}
 
-	go w.QueueWriteMessage(msg)
+	w.QueueWriteMessage(msg)
 
 	return nil
 }

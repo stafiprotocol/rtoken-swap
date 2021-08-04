@@ -5,48 +5,70 @@ package substrate
 
 import (
 	"fmt"
+	"math/big"
 	"time"
-
-	"rtoken-swap/chains"
-	"rtoken-swap/core"
-	"rtoken-swap/models/submodel"
 
 	"github.com/ChainSafe/log15"
 	"github.com/stafiprotocol/chainbridge/utils/blockstore"
+	"rtoken-swap/chains"
+	"rtoken-swap/config"
+	"rtoken-swap/core"
 )
 
 type listener struct {
-	name         string
-	symbol       core.RSymbol
-	care         core.RSymbol
-	startBlock   uint64
-	blockstore   blockstore.Blockstorer
-	conn         *Connection
-	router       chains.Router
-	log          log15.Logger
-	stop         <-chan int
-	sysErr       chan<- error
-	lastEraBlock uint64
+	name          string
+	symbol        core.RSymbol
+	cares         []core.RSymbol
+	startBlock    uint64
+	blockstore    blockstore.Blockstorer
+	conn          *Connection
+	subscriptions map[eventName]eventHandler // Handlers for specific events
+	router        chains.Router
+	log           log15.Logger
+	stop          <-chan int
+	sysErr        chan<- error
+	lastEraBlock  uint64
 }
 
 // Frequency of polling for a new block
 var (
-	BlockRetryInterval = time.Second * 6
-	BlockRetryLimit    = 20
+	OneBlockTime              = 5 * time.Second
+	BlockRetryInterval        = time.Second * 1
+	BlockRetryLimit           = 5
+	BlockIntervalToProcessEra = uint64(10)
+	EventRetryLimit           = 10
+	EventRetryInterval        = 100 * time.Millisecond
 )
 
-func NewListener(name string, symbol, care core.RSymbol, opts map[string]interface{}, startBlock uint64, bs blockstore.Blockstorer, conn *Connection, log log15.Logger, stop <-chan int, sysErr chan<- error) *listener {
+func NewListener(name string, symbol core.RSymbol, opts map[string]interface{}, startBlock uint64, bs blockstore.Blockstorer, conn *Connection, log log15.Logger, stop <-chan int, sysErr chan<- error) *listener {
+	cares := make([]core.RSymbol, 0)
+	optCares := opts["cares"]
+	log.Info("NewListener", "optCares", optCares)
+	if optCares != nil {
+		if tmpCares, ok := optCares.([]interface{}); ok {
+			for _, tc := range tmpCares {
+				care, ok := tc.(string)
+				if !ok {
+					panic("care not string")
+				}
+				cares = append(cares, core.RSymbol(care))
+			}
+		} else {
+			panic("opt cares not string array")
+		}
+	}
 	return &listener{
-		name:         name,
-		symbol:       symbol,
-		care:         care,
-		startBlock:   startBlock,
-		blockstore:   bs,
-		conn:         conn,
-		log:          log,
-		stop:         stop,
-		sysErr:       sysErr,
-		lastEraBlock: 0,
+		name:          name,
+		symbol:        symbol,
+		cares:         cares,
+		startBlock:    startBlock,
+		blockstore:    bs,
+		conn:          conn,
+		subscriptions: make(map[eventName]eventHandler),
+		log:           log,
+		stop:          stop,
+		sysErr:        sysErr,
+		lastEraBlock:  0,
 	}
 }
 
@@ -65,6 +87,13 @@ func (l *listener) start() error {
 		return fmt.Errorf("starting block (%d) is greater than latest known block (%d)", l.startBlock, latestBlk)
 	}
 
+	for _, sub := range Subscriptions {
+		err := l.registerEventHandler(sub.name, sub.handler)
+		if err != nil {
+			return err
+		}
+	}
+
 	go func() {
 		err = l.pollBlocks()
 		if err != nil {
@@ -75,17 +104,21 @@ func (l *listener) start() error {
 	return nil
 }
 
-func (l *listener) pollBlocks() error {
-	var nextDealBlock = l.startBlock
-	var retry = BlockRetryLimit
-	latestDealBlock, err := l.conn.GetLatestDealBlock(l.care)
-	if err != nil {
-		panic(err)
+// registerEventHandler enables a handler for a given event. This cannot be used after Start is called.
+func (l *listener) registerEventHandler(name eventName, handler eventHandler) error {
+	if l.subscriptions[name] != nil {
+		return fmt.Errorf("event %s already registered", name)
 	}
-	if latestDealBlock+1 > l.startBlock {
-		nextDealBlock = latestDealBlock + 1
-	}
+	l.subscriptions[name] = handler
+	return nil
+}
 
+// pollBlocks will poll for the latest block and proceed to parse the associated events as it sees new blocks.
+// Polling begins at the block defined in `l.startBlock`. Failed attempts to fetch the latest block or parse
+// a block will be retried up to BlockRetryLimit times before returning with an error.
+func (l *listener) pollBlocks() error {
+	var currentBlock = l.startBlock
+	var retry = BlockRetryLimit
 	for {
 		select {
 		case <-l.stop:
@@ -104,52 +137,99 @@ func (l *listener) pollBlocks() error {
 				time.Sleep(BlockRetryInterval)
 				continue
 			}
-			latestBlockFlag := finalBlk - l.blockDelay()
 
-			//wait if next deal block is too new
-			if nextDealBlock > latestBlockFlag {
-				time.Sleep(BlockInterval)
+			// Sleep if the block we want comes after the most recently finalized block
+			if currentBlock+l.blockDelay() > finalBlk {
+				if currentBlock%100 == 0 {
+					l.log.Trace("Block not yet finalized", "target", currentBlock, "finalBlk", finalBlk)
+				}
+				time.Sleep(OneBlockTime)
 				continue
 			}
-			//check ransinfo in next deal block
-			transInfos, err := l.conn.GetTransInfos(l.care, nextDealBlock)
-			//retry if err
-			if err != nil && err != ErrNotExist {
-				l.log.Error("Failed to fetch get transinfo ", "err", err, "block", nextDealBlock)
+
+			err = l.processEvents(currentBlock)
+			if err != nil {
+				l.log.Error("Failed to process events in block", "block", currentBlock, "err", err)
 				retry--
-				time.Sleep(BlockRetryInterval)
 				continue
 			}
-			//process if has some transInfos
-			if err == nil && len(transInfos.List) > 0 {
-				l.log.Info("processTransInfos", "info", transInfos)
-				err := l.processTransInfos(transInfos)
+
+			if l.symbol == core.RFIS {
+				// Write to blockstore
+				err = l.blockstore.StoreBlock(big.NewInt(0).SetUint64(currentBlock))
 				if err != nil {
-					panic(err)
+					l.log.Error("Failed to write to blockstore", "err", err)
 				}
 			}
-			if nextDealBlock%100 == 0 {
-				l.log.Info("next deal block", "blocknumber", nextDealBlock)
-			}
-
-			nextDealBlock++
+			currentBlock++
 			retry = BlockRetryLimit
 		}
 	}
 }
 
-func (l *listener) processTransInfos(infos *submodel.TransInfoList) error {
-	msg := &core.Message{Destination: l.care, Reason: core.NewTransInfos, Content: infos}
-	return l.submitWriteMessage(msg)
+// processEvents fetches a block and parses out the events, calling Listener.handleEvents()
+func (l *listener) processEvents(blockNum uint64) error {
+	if blockNum%100 == 0 {
+		l.log.Debug("processEvents", "blockNum", blockNum)
+	}
+	evts, err := l.conn.GetEvents(blockNum)
+	if err != nil {
+		for i := 0; i < EventRetryLimit; i++ {
+			time.Sleep(EventRetryInterval)
+			evts, err = l.conn.GetEvents(blockNum)
+			if err == nil {
+				break
+			}
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, evt := range evts {
+		switch {
+		case evt.ModuleId == config.MultisigModuleId && evt.EventId == config.NewMultisigEventId:
+			l.log.Trace("Handling NewMultisigEvent", "block", blockNum)
+			flow, err := l.processNewMultisigEvt(evt)
+			if err != nil {
+				if err.Error() == ErrMultiEnd.Error() {
+					l.log.Info("listener received an ended NewMultisig event, ignored")
+					continue
+				}
+				return err
+			}
+			if l.subscriptions[NewMultisig] != nil {
+				l.submitWriteMessage(l.subscriptions[NewMultisig](flow))
+			}
+		case evt.ModuleId == config.MultisigModuleId && evt.EventId == config.MultisigExecutedEventId:
+			l.log.Trace("Handling MultisigExecutedEvent", "block", blockNum)
+			flow, err := l.processMultisigExecutedEvt(evt)
+			if err != nil {
+				return err
+			}
+			if l.subscriptions[MultisigExecuted] != nil {
+				l.submitWriteMessage(l.subscriptions[MultisigExecuted](flow))
+			}
+		}
+	}
+
+	return nil
 }
 
-// submitMessage send msg to other chain
-func (l *listener) submitWriteMessage(m *core.Message) error {
+// submitMessage inserts the chainId into the msg and sends it to the router
+func (l *listener) submitWriteMessage(m *core.Message, err error) {
+	if err != nil {
+		l.log.Error("Critical error before sending message", "err", err)
+		return
+	}
 	m.Source = l.symbol
 	if m.Destination == "" {
 		m.Destination = m.Source
 	}
-	return l.router.SendWriteMesage(m)
+	err = l.router.SendWriteMesage(m)
+	if err != nil {
+		l.log.Error("failed to send message", "err", err)
+	}
 }
 
 func (l *listener) blockDelay() uint64 {
@@ -159,4 +239,18 @@ func (l *listener) blockDelay() uint64 {
 	default:
 		return 0
 	}
+}
+
+func (l *listener) cared(symbol core.RSymbol) bool {
+	if len(l.cares) == 0 {
+		return true
+	}
+
+	for _, care := range l.cares {
+		if care == symbol {
+			return true
+		}
+	}
+
+	return false
 }

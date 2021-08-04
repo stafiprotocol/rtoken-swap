@@ -36,7 +36,7 @@ func InitializeChain(cfg *core.ChainConfig, logger log15.Logger, sysErr chan<- e
 	bs := new(blockstore.Blockstore)
 
 	// Setup listener & writer
-	l := NewListener(cfg.Name, cfg.Symbol, cfg.Care, cfg.Opts, blk, bs, conn, logger, stop, sysErr)
+	l := NewListener(cfg.Name, cfg.Symbol, cfg.Opts, blk, bs, conn, logger, stop, sysErr)
 	w := NewReaderWriter(cfg.Symbol, cfg.Opts, conn, logger, sysErr, stop)
 	return &Chain{cfg: cfg, conn: conn, listener: l, writer: w, stop: stop}, nil
 }

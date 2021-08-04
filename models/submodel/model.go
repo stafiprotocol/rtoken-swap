@@ -54,16 +54,6 @@ type MultiCallParam struct {
 	CallHash  string
 }
 
-type PoolUnbondKey struct {
-	Pool []byte
-	Era  uint32
-}
-
-type Unbonding struct {
-	Who       types.AccountID
-	Value     types.U128
-	Recipient []byte
-}
 
 type Receive struct {
 	Recipient []byte
@@ -94,6 +84,12 @@ type Transaction struct {
 	CallName       string
 	Address        interface{}
 	Params         []chainTypes.ExtrinsicParam
+}
+
+type TransInfoSingle struct {
+	Block uint64
+	Index uint32
+	Info  TransInfo
 }
 
 type TransInfoList struct {
