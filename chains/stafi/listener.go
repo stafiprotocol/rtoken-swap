@@ -139,6 +139,12 @@ func (l *listener) pollBlocks() error {
 }
 
 func (l *listener) processTransInfos(infos *submodel.TransInfoList) error {
+	//check transinfo is not deal
+	for _, transInfo := range infos.List {
+		if transInfo.IsDeal {
+			return fmt.Errorf("transInfo must not deal")
+		}
+	}
 	msg := &core.Message{Destination: l.care, Reason: core.NewTransInfos, Content: infos}
 	return l.submitWriteMessage(msg)
 }
