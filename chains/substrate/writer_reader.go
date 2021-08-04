@@ -4,14 +4,18 @@
 package substrate
 
 import (
+	"bytes"
 	"fmt"
 	"rtoken-swap/chains"
 	"rtoken-swap/core"
 	"rtoken-swap/models/submodel"
+	"rtoken-swap/utils"
+	"sort"
 	"sync"
 
 	"github.com/ChainSafe/log15"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/stafiprotocol/go-substrate-rpc-client/types"
 )
 
 const msgLimit = 1024
@@ -85,7 +89,7 @@ func (w *writer) resolveWriteMessage(m *core.Message) (processOk bool) {
 
 	switch m.Reason {
 	case core.NewTransInfoSingle:
-
+		return w.processNewTransferSingle(m)
 	case core.NewMultisig:
 		return w.processNewMultisig(m)
 	case core.MultisigExecuted:
@@ -94,11 +98,98 @@ func (w *writer) resolveWriteMessage(m *core.Message) (processOk bool) {
 		w.log.Warn("message reason unsupported", "reason", m.Reason)
 		return true
 	}
-	return
 }
 
 func (w *writer) printContentError(m *core.Message) {
 	w.log.Error("msg resolve failed", "source", m.Source, "dest", m.Destination, "reason", m.Reason)
+}
+
+func (w *writer) processNewTransferSingle(m *core.Message) bool {
+	transInfoSingle, ok := m.Content.(*submodel.TransInfoSingle)
+	if !ok {
+		w.printContentError(m)
+		return false
+	}
+
+	balance, err := w.conn.FreeBalance(w.conn.MultisigAccount[:])
+	if err != nil {
+		w.log.Error("FreeBalance error", "err", err, "pool", hexutil.Encode(w.conn.MultisigAccount[:]))
+		return false
+	}
+	e, err := w.conn.ExistentialDeposit()
+	if err != nil {
+		w.log.Error("ExistentialDeposit error", "err", err, "pool", hexutil.Encode(w.conn.MultisigAccount[:]))
+		return false
+	}
+	least := utils.AddU128(transInfoSingle.Info.Value, e)
+	if balance.Cmp(least.Int) < 0 {
+		w.sysErr <- fmt.Errorf("free balance not enough for transfer back, symbol: %s, pool: %s, least: %s",
+			w.symbol, hexutil.Encode(w.conn.gc.PublicKey()), least.Int.String())
+		return false
+	}
+
+	mef := &submodel.MultiEventFlow{}
+
+	mef.Key = w.conn.SubKey
+	mef.Others = w.conn.OthersAccount
+
+	call, err := w.conn.TransferCall(transInfoSingle.Info.Account[:], types.NewUCompact(transInfoSingle.Info.Value.Int))
+	if err != nil {
+		w.log.Error("TransferCall error", "symbol", m.Source)
+		return false
+	}
+
+	info, err := w.conn.PaymentQueryInfo(call.Extrinsic)
+	if err != nil {
+		w.log.Error("PaymentQueryInfo error", "err", err, "callHash", call.CallHash, "Extrinsic", call.Extrinsic)
+		return false
+	}
+	mef.PaymentInfo = info
+	mef.OpaqueCalls = []*submodel.MultiOpaqueCall{call}
+	callhash := call.CallHash
+	mef.NewMulCallHashs = map[string]bool{callhash: true}
+	mef.MulExeCallHashs = map[string]bool{callhash: true}
+	w.setEvents(callhash, mef)
+	w.log.Info("processNewTransferSingle: event set", "callHash", callhash)
+
+	index := transInfoSingle.Block % (uint64(len(w.conn.OthersAccount)) + 1)
+
+	allSubAccount := make([]types.AccountID, 0)
+	allSubAccount = append(allSubAccount, types.NewAccountID(w.conn.SubKey.PublicKey))
+	allSubAccount = append(allSubAccount, w.conn.OthersAccount...)
+	sort.SliceStable(allSubAccount, func(i, j int) bool {
+		return bytes.Compare(allSubAccount[i][:], allSubAccount[j][:]) > 0
+	})
+
+	if bytes.Equal(allSubAccount[index][:], w.conn.SubKey.PublicKey) {
+
+		call.TimePoint = submodel.NewOptionTimePointEmpty()
+		err = w.conn.AsMulti(mef)
+		if err != nil {
+			w.log.Error("AsMulti error", "err", err, "callHash", callhash)
+			return false
+		}
+		w.log.Info("AsMulti success", "callHash", callhash)
+
+		return true
+	}
+
+	newMuls, ok := w.getNewMultics(callhash)
+	if !ok {
+		w.log.Info("not last voter, wait for NewMultisigEvent", "callHash", callhash)
+		w.setEvents(call.CallHash, mef)
+		return true
+	}
+	call.TimePoint = newMuls.TimePoint
+
+	err = w.conn.AsMulti(mef)
+	if err != nil {
+		w.log.Error("AsMulti error", "err", err, "callHash", callhash)
+		return false
+	}
+
+	w.log.Info("AsMulti success", "callHash", callhash)
+	return true
 }
 
 func (w *writer) processNewMultisig(m *core.Message) bool {
@@ -108,18 +199,16 @@ func (w *writer) processNewMultisig(m *core.Message) bool {
 		return false
 	}
 
-	// w.conn.Address()
-	// _, ok = w.getBondedPools(hexutil.Encode(flow.ID[:]))
-	// if !ok {
-	// 	w.log.Info("received a newMultisig event which the ID is not in the bondedPools, ignored")
-	// 	return true
-	// }
+	if !bytes.Equal(flow.ID[:], w.conn.MultisigAccount[:]) {
+		w.log.Info("received a newMultisig event which the ID is not  the Pool, ignored")
+		return true
+	}
 
 	w.setNewMultics(flow.CallHashStr, flow)
 
 	evt, ok := w.getEvents(flow.CallHashStr)
 	if !ok {
-		w.log.Info("receive a newMultisig, wait for more flow data", "callHash", flow.CallHashStr)
+		w.log.Info("receive a newMultisig, wait for more  data", "callHash", flow.CallHashStr)
 		return true
 	}
 
@@ -160,11 +249,10 @@ func (w *writer) processMultisigExecuted(m *core.Message) bool {
 		return false
 	}
 
-	// _, ok = w.getBondedPools(hexutil.Encode(flow.ID[:]))
-	// if !ok {
-	// 	w.log.Info("received a multisigExecuted event which the ID is not in the bondedPools, ignored")
-	// 	return true
-	// }
+	if !bytes.Equal(flow.ID[:], w.conn.MultisigAccount[:]) {
+		w.log.Info("received a multisigExecuted event which the ID is not  the Pool, ignored")
+		return true
+	}
 
 	evt, ok := w.getEvents(flow.CallHashStr)
 	if !ok {

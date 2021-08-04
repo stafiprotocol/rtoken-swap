@@ -32,7 +32,10 @@ func InitializeChain(cfg *core.ChainConfig, logger log15.Logger, sysErr chan<- e
 		return nil, err
 	}
 
-	blk := parseStartBlock(cfg)
+	blk, err := conn.LatestBlockNumber()
+	if err != nil {
+		return nil, err
+	}
 	bs := new(blockstore.Blockstore)
 
 	// Setup listener & writer

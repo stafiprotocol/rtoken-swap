@@ -1,0 +1,32 @@
+{
+  "chains": [
+    {
+      "name": "stafi",
+      "rsymbol": "RFIS",
+      "endpoint": "ws://127.0.0.1:9944",
+      "keystorePath": "/Users/tpkeeper/gowork/stafi/rtoken-swap/keys",
+      "care": "RDOT",
+      "opts": {
+        "payerAccount": "35arN8keEJhSeSnpyH9Cu6CBsmGchGgJi577CxHyPUuobUhg",
+        "typesPath": "/Users/tpkeeper/gowork/stafi/rtoken-swap/network/stafi.json",
+        "startBlock": "3700",
+        "addressType": "AccountId"
+      }
+    },
+    {
+      "name": "polkadot",
+      "rsymbol": "RDOT",
+      "endpoint": "ws://127.0.0.1:9944",
+      "keystorePath": "/Users/tpkeeper/gowork/stafi/rtoken-swap/keys",
+      "opts": {
+        "multisigAccount": "35arN8keEJhSeSnpyH9Cu6CBsmGchGgJi577CxHyPUuobUhg",
+        "subAccount": "35arN8keEJhSeSnpyH9Cu6CBsmGchGgJi577CxHyPUuobUhg",
+        "otherSubAccounts": [
+          "",
+          ""
+        ],
+        "typesPath": "/Users/tpkeeper/gowork/stafi/rtoken-swap/network/polkadot.json",
+      }
+    }
+  ]
+}

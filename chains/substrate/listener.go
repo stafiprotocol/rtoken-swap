@@ -5,7 +5,6 @@ package substrate
 
 import (
 	"fmt"
-	"math/big"
 	"time"
 
 	"github.com/ChainSafe/log15"
@@ -18,7 +17,6 @@ import (
 type listener struct {
 	name          string
 	symbol        core.RSymbol
-	cares         []core.RSymbol
 	startBlock    uint64
 	blockstore    blockstore.Blockstorer
 	conn          *Connection
@@ -41,26 +39,10 @@ var (
 )
 
 func NewListener(name string, symbol core.RSymbol, opts map[string]interface{}, startBlock uint64, bs blockstore.Blockstorer, conn *Connection, log log15.Logger, stop <-chan int, sysErr chan<- error) *listener {
-	cares := make([]core.RSymbol, 0)
-	optCares := opts["cares"]
-	log.Info("NewListener", "optCares", optCares)
-	if optCares != nil {
-		if tmpCares, ok := optCares.([]interface{}); ok {
-			for _, tc := range tmpCares {
-				care, ok := tc.(string)
-				if !ok {
-					panic("care not string")
-				}
-				cares = append(cares, core.RSymbol(care))
-			}
-		} else {
-			panic("opt cares not string array")
-		}
-	}
+
 	return &listener{
 		name:          name,
 		symbol:        symbol,
-		cares:         cares,
 		startBlock:    startBlock,
 		blockstore:    bs,
 		conn:          conn,
@@ -154,13 +136,6 @@ func (l *listener) pollBlocks() error {
 				continue
 			}
 
-			if l.symbol == core.RFIS {
-				// Write to blockstore
-				err = l.blockstore.StoreBlock(big.NewInt(0).SetUint64(currentBlock))
-				if err != nil {
-					l.log.Error("Failed to write to blockstore", "err", err)
-				}
-			}
 			currentBlock++
 			retry = BlockRetryLimit
 		}
@@ -239,18 +214,4 @@ func (l *listener) blockDelay() uint64 {
 	default:
 		return 0
 	}
-}
-
-func (l *listener) cared(symbol core.RSymbol) bool {
-	if len(l.cares) == 0 {
-		return true
-	}
-
-	for _, care := range l.cares {
-		if care == symbol {
-			return true
-		}
-	}
-
-	return false
 }

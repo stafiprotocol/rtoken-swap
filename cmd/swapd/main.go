@@ -129,7 +129,7 @@ func run(ctx *cli.Context) error {
 			if err != nil {
 				return err
 			}
-		case "polkdot", "kusama":
+		case "polkadot", "kusama":
 			newChain, err = substrate.InitializeChain(chainConfig, logger, sysErr)
 			if err != nil {
 				return err

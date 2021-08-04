@@ -16,15 +16,16 @@ import (
 const DefaultConfigPath = "./config.json"
 const DefaultKeystorePath = "./keys"
 const (
-	MultisigAccountKey = "multisigAccount"
-	SubAccountKey      = "subAccount"
-	PayerAccountKey    = "payerAccount"
-	ChainIdKey         = "chainId"
-	DenomKey           = "denom"
-	GasPriceKey        = "gasPrice"
-	TypesPathKey       = "typesPath"
-	AddressTypeKey     = "addressType"
-	ThresholdKey       = "threshold"
+	MultisigAccountKey  = "multisigAccount"
+	SubAccountKey       = "subAccount"
+	OtherSubAccountsKey = "otherSubAccounts"
+	PayerAccountKey     = "payerAccount"
+	ChainIdKey          = "chainId"
+	DenomKey            = "denom"
+	GasPriceKey         = "gasPrice"
+	TypesPathKey        = "typesPath"
+	AddressTypeKey      = "addressType"
+	ThresholdKey        = "threshold"
 )
 
 type Config struct {

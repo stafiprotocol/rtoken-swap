@@ -14,22 +14,27 @@ import (
 	"rtoken-swap/shared/substrate"
 
 	"github.com/ChainSafe/log15"
+	"github.com/JFJun/go-substrate-crypto/ss58"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/itering/substrate-api-rpc/rpc"
 	"github.com/stafiprotocol/chainbridge/utils/crypto/sr25519"
 	"github.com/stafiprotocol/chainbridge/utils/keystore"
+	"github.com/stafiprotocol/go-substrate-rpc-client/signature"
 	"github.com/stafiprotocol/go-substrate-rpc-client/types"
 )
 
 var ErrNotExist = fmt.Errorf("not exist in storage")
 
 type Connection struct {
-	url    string
-	symbol core.RSymbol
-	sc     *substrate.SarpcClient
-	gc     *substrate.GsrpcClient
-	log    log15.Logger
-	stop   <-chan int
+	url             string
+	symbol          core.RSymbol
+	MultisigAccount types.AccountID
+	SubKey          *signature.KeyringPair
+	OthersAccount   []types.AccountID
+	sc              *substrate.SarpcClient
+	gc              *substrate.GsrpcClient
+	log             log15.Logger
+	stop            <-chan int
 }
 
 var (
@@ -43,23 +48,37 @@ var (
 
 func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*Connection, error) {
 	log.Info("NewConnection", "KeystorePath", cfg.KeystorePath, "Endpoint", cfg.Endpoint, "typesPath", cfg.Opts["typesPath"])
-
-	typesPath := cfg.Opts[config.TypesPathKey]
-	path, ok := typesPath.(string)
+	path, ok := cfg.Opts[config.TypesPathKey].(string)
 	if !ok {
 		return nil, errors.New("no typesPath")
 	}
 
-	adType := cfg.Opts[config.AddressTypeKey]
-	addressType, ok := adType.(string)
+	subAccount, ok := cfg.Opts[config.SubAccountKey].(string)
 	if !ok {
 		return nil, errors.New("addressType not ok")
 	}
 
-	subAccountInterface := cfg.Opts[config.SubAccountKey]
-	subAccount, ok := subAccountInterface.(string)
+	multisigAccountStr, ok := cfg.Opts[config.MultisigAccountKey].(string)
 	if !ok {
 		return nil, errors.New("addressType not ok")
+	}
+	multisigAccountBts, err := ss58.DecodeToPub(multisigAccountStr)
+	if err != nil {
+		return nil, err
+	}
+
+	otherSubAccountsStr, ok := cfg.Opts[config.OtherSubAccountsKey].([]string)
+	if !ok {
+		return nil, errors.New("addressType not ok")
+	}
+
+	otherAccounts := make([]types.AccountID, 0)
+	for _, other := range otherSubAccountsStr {
+		otherBts, err := ss58.DecodeToPub(other)
+		if err != nil {
+			return nil, err
+		}
+		otherAccounts = append(otherAccounts, types.NewAccountID(otherBts))
 	}
 
 	sc, err := substrate.NewSarpcClient(cfg.Name, cfg.Endpoint, path, log)
@@ -72,18 +91,21 @@ func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*C
 		return nil, fmt.Errorf("keypairFromAddress err: %s", err)
 	}
 	krp := kp.(*sr25519.Keypair).AsKeyringPair()
-	gc, err := substrate.NewGsrpcClient(cfg.Endpoint, addressType, krp, log, stop)
+	gc, err := substrate.NewGsrpcClient(cfg.Endpoint, "MultiAddress", krp, log, stop)
 	if err != nil {
 		return nil, fmt.Errorf("substrate.NewGsrpcClient err %s", err)
 	}
 
 	return &Connection{
-		url:    cfg.Endpoint,
-		symbol: cfg.Symbol,
-		log:    log,
-		stop:   stop,
-		sc:     sc,
-		gc:     gc,
+		url:             cfg.Endpoint,
+		symbol:          cfg.Symbol,
+		log:             log,
+		stop:            stop,
+		SubKey:          krp,
+		MultisigAccount: types.NewAccountID(multisigAccountBts),
+		OthersAccount:   otherAccounts,
+		sc:              sc,
+		gc:              gc,
 	}, nil
 }
 
@@ -271,77 +293,4 @@ func (c *Connection) asMulti(flow *submodel.MultiEventFlow) error {
 	}
 
 	return gc.SignAndSubmitTx(ext)
-}
-
-func (c *Connection) submitSignature(param *submodel.SubmitSignatureParams) bool {
-	for i := 0; i < BlockRetryLimit; i++ {
-		c.log.Info("submitSignature on chain...")
-		ext, err := c.gc.NewUnsignedExtrinsic(config.SubmitSignatures, param.Symbol,
-			param.Block, param.ProposalId, param.Signature)
-		if err != nil {
-			c.log.Warn("submitSignature error will retry", "err", err)
-			time.Sleep(BlockRetryInterval)
-			continue
-		}
-		err = c.gc.SignAndSubmitTx(ext)
-		if err != nil {
-			if err.Error() == ErrorTerminated.Error() {
-				c.log.Error("submitSignature  met TerminatedError")
-				return false
-			}
-			c.log.Warn("submitSignature error will retry", "err", err)
-			time.Sleep(BlockRetryInterval)
-			continue
-		}
-		return true
-	}
-	return true
-}
-
-func (c *Connection) reportTransResultWithBlock(symbol core.RSymbol, block uint64) bool {
-	for i := 0; i < BlockRetryLimit; i++ {
-		c.log.Info("reportTransResultWithBlock on chain...")
-		ext, err := c.gc.NewUnsignedExtrinsic(config.ReportTransResultWithBlock, symbol, block)
-		if err != nil {
-			c.log.Warn("reportTransResultWithBlock error will retry", "err", err)
-			time.Sleep(BlockRetryInterval)
-			continue
-		}
-		err = c.gc.SignAndSubmitTx(ext)
-		if err != nil {
-			if err.Error() == ErrorTerminated.Error() {
-				c.log.Error("reportTransResultWithBlock  met TerminatedError")
-				return false
-			}
-			c.log.Warn("reportTransResultWithBlock error will retry", "err", err)
-			time.Sleep(BlockRetryInterval)
-			continue
-		}
-		return true
-	}
-	return true
-}
-
-func (c *Connection) reportTransResultWithIndex(symbol core.RSymbol, block uint64, index uint32) bool {
-	for i := 0; i < BlockRetryLimit; i++ {
-		c.log.Info("reportTransResultWithIndex on chain...")
-		ext, err := c.gc.NewUnsignedExtrinsic(config.ReportTransResultWithIndex, symbol, block, index)
-		if err != nil {
-			c.log.Warn("reportTransResultWithIndex error will retry", "err", err)
-			time.Sleep(BlockRetryInterval)
-			continue
-		}
-		err = c.gc.SignAndSubmitTx(ext)
-		if err != nil {
-			if err.Error() == ErrorTerminated.Error() {
-				c.log.Error("reportTransResultWithIndex  met TerminatedError")
-				return false
-			}
-			c.log.Warn("reportTransResultWithIndex error will retry", "err", err)
-			time.Sleep(BlockRetryInterval)
-			continue
-		}
-		return true
-	}
-	return true
 }
