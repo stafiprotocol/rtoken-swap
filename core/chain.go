@@ -12,12 +12,13 @@ type Chain interface {
 }
 
 type ChainConfig struct {
-	Name         string  // Human-readable chain name
-	Symbol       RSymbol // symbol
-	Endpoint     string  // url for rpc endpoint
-	Care         RSymbol
-	Accounts     []string               // addresses of key to use
-	KeystorePath string                 // Lortoken-swapion of key files
-	Insecure     bool                   // Indirtoken-swaped whether the test keyring should be used
-	Opts         map[string]interface{} // Per chain options
+	Name            string  // Human-readable chain name
+	Symbol          RSymbol // symbol
+	Endpoint        string  // url for rpc endpoint
+	Care            RSymbol
+	LatestBlockFlag bool
+	Accounts        []string               // addresses of key to use
+	KeystorePath    string                 // Lortoken-swapion of key files
+	Insecure        bool                   // Indirtoken-swaped whether the test keyring should be used
+	Opts            map[string]interface{} // Per chain options
 }

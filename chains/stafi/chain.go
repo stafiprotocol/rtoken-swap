@@ -7,6 +7,7 @@ import (
 	"errors"
 	"strconv"
 
+	"rtoken-swap/config"
 	"rtoken-swap/core"
 
 	"github.com/ChainSafe/log15"
@@ -73,10 +74,10 @@ func (c *Chain) Stop() {
 }
 
 func parseStartBlock(cfg *core.ChainConfig) uint64 {
-	if blk, ok := cfg.Opts["startBlock"]; ok {
+	if blk, ok := cfg.Opts[config.StartBlockKey]; ok {
 		blkStr, ok := blk.(string)
 		if !ok {
-			panic("block not string")
+			panic("start block not string")
 		}
 		res, err := strconv.ParseUint(blkStr, 10, 32)
 		if err != nil {

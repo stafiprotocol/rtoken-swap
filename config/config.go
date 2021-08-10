@@ -26,6 +26,8 @@ const (
 	TypesPathKey        = "typesPath"
 	AddressTypeKey      = "addressType"
 	ThresholdKey        = "threshold"
+	StartBlockKey       = "startBlock"
+	LatestBLockFlagKey  = "latestBlockFlog"
 )
 
 type Config struct {
@@ -34,12 +36,13 @@ type Config struct {
 
 // RawChainConfig is parsed directly from the config file and should be using to construct the core.ChainConfig
 type RawChainConfig struct {
-	Name         string                 `json:"name"`
-	Rsymbol      string                 `json:"rsymbol"`
-	Endpoint     string                 `json:"endpoint"` // url for rpc endpoint
-	KeystorePath string                 `json:"keystorePath"`
-	Care         string                 `josn:"care"`
-	Opts         map[string]interface{} `json:"opts"`
+	Name            string                 `json:"name"`
+	Rsymbol         string                 `json:"rsymbol"`
+	Endpoint        string                 `json:"endpoint"` // url for rpc endpoint
+	KeystorePath    string                 `json:"keystorePath"`
+	Care            string                 `json:"care"`
+	LatestBlockFlag bool                   `json:"latestBlockFlag"`
+	Opts            map[string]interface{} `json:"opts"`
 }
 
 func NewConfig() *Config {

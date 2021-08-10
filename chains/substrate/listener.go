@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/ChainSafe/log15"
-	"github.com/stafiprotocol/chainbridge/utils/blockstore"
 	"rtoken-swap/chains"
 	"rtoken-swap/config"
 	"rtoken-swap/core"
@@ -18,7 +17,6 @@ type listener struct {
 	name          string
 	symbol        core.RSymbol
 	startBlock    uint64
-	blockstore    blockstore.Blockstorer
 	conn          *Connection
 	subscriptions map[eventName]eventHandler // Handlers for specific events
 	router        chains.Router
@@ -38,13 +36,12 @@ var (
 	EventRetryInterval        = 100 * time.Millisecond
 )
 
-func NewListener(name string, symbol core.RSymbol, opts map[string]interface{}, startBlock uint64, bs blockstore.Blockstorer, conn *Connection, log log15.Logger, stop <-chan int, sysErr chan<- error) *listener {
+func NewListener(name string, symbol core.RSymbol, startBlock uint64, conn *Connection, log log15.Logger, stop <-chan int, sysErr chan<- error) *listener {
 
 	return &listener{
 		name:          name,
 		symbol:        symbol,
 		startBlock:    startBlock,
-		blockstore:    bs,
 		conn:          conn,
 		subscriptions: make(map[eventName]eventHandler),
 		log:           log,

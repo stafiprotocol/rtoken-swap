@@ -7,10 +7,10 @@ import (
 	"errors"
 	"strconv"
 
+	"rtoken-swap/config"
 	"rtoken-swap/core"
 
 	"github.com/ChainSafe/log15"
-	"github.com/stafiprotocol/chainbridge/utils/blockstore"
 )
 
 var ErrorTerminated = errors.New("terminated")
@@ -32,14 +32,20 @@ func InitializeChain(cfg *core.ChainConfig, logger log15.Logger, sysErr chan<- e
 		return nil, err
 	}
 
-	blk, err := conn.LatestBlockNumber()
+	useStartBlock := uint64(0)
+	latestBlock, err := conn.LatestBlockNumber()
 	if err != nil {
 		return nil, err
 	}
-	bs := new(blockstore.Blockstore)
+	startBlock := parseStartBlock(cfg)
+	if cfg.LatestBlockFlag {
+		useStartBlock = latestBlock
+	} else {
+		useStartBlock = startBlock
+	}
 
 	// Setup listener & writer
-	l := NewListener(cfg.Name, cfg.Symbol, cfg.Opts, blk, bs, conn, logger, stop, sysErr)
+	l := NewListener(cfg.Name, cfg.Symbol, useStartBlock, conn, logger, stop, sysErr)
 	w := NewReaderWriter(cfg.Symbol, cfg.Opts, conn, logger, sysErr, stop)
 	return &Chain{cfg: cfg, conn: conn, listener: l, writer: w, stop: stop}, nil
 }
@@ -76,7 +82,7 @@ func (c *Chain) Stop() {
 }
 
 func parseStartBlock(cfg *core.ChainConfig) uint64 {
-	if blk, ok := cfg.Opts["startBlock"]; ok {
+	if blk, ok := cfg.Opts[config.StartBlockKey]; ok {
 		blkStr, ok := blk.(string)
 		if !ok {
 			panic("block not string")

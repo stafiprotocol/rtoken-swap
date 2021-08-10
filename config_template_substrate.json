@@ -17,8 +17,10 @@
       "name": "polkadot",
       "rsymbol": "RDOT",
       "endpoint": "ws://127.0.0.1:9944",
+      "latestBlockFlag": true,
       "keystorePath": "/Users/tpkeeper/gowork/stafi/rtoken-swap/keys",
       "opts": {
+        "startBlock": "0",
         "multisigAccount": "35arN8keEJhSeSnpyH9Cu6CBsmGchGgJi577CxHyPUuobUhg",
         "subAccount": "35arN8keEJhSeSnpyH9Cu6CBsmGchGgJi577CxHyPUuobUhg",
         "otherSubAccounts": [

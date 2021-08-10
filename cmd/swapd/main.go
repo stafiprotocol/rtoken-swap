@@ -107,13 +107,14 @@ func run(ctx *cli.Context) error {
 
 	for _, chain := range cfg.Chains {
 		chainConfig := &core.ChainConfig{
-			Name:         chain.Name,
-			Symbol:       core.RSymbol(chain.Rsymbol),
-			Endpoint:     chain.Endpoint,
-			KeystorePath: chain.KeystorePath,
-			Care:         core.RSymbol(chain.Care),
-			Insecure:     false,
-			Opts:         chain.Opts,
+			Name:            chain.Name,
+			Symbol:          core.RSymbol(chain.Rsymbol),
+			Endpoint:        chain.Endpoint,
+			KeystorePath:    chain.KeystorePath,
+			Care:            core.RSymbol(chain.Care),
+			LatestBlockFlag: chain.LatestBlockFlag,
+			Insecure:        false,
+			Opts:            chain.Opts,
 		}
 		var newChain core.Chain
 		logger := log.Root().New("chain", chainConfig.Name)
@@ -129,11 +130,12 @@ func run(ctx *cli.Context) error {
 			if err != nil {
 				return err
 			}
-		case "polkadot", "kusama":
+		case "polkadot", "kusama", "stafix":
 			newChain, err = substrate.InitializeChain(chainConfig, logger, sysErr)
 			if err != nil {
 				return err
 			}
+
 		default:
 			return errors.New("unrecognized Chain Type")
 		}
