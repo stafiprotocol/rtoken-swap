@@ -38,3 +38,5 @@ config3.json
 relay_log*.json
 datas/
 config_cosmos.json
+config_stafi.json
+config_stafi2.json

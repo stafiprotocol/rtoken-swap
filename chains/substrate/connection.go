@@ -55,25 +55,29 @@ func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*C
 
 	subAccount, ok := cfg.Opts[config.SubAccountKey].(string)
 	if !ok {
-		return nil, errors.New("addressType not ok")
+		return nil, errors.New("subAccountKey not ok")
 	}
 
 	multisigAccountStr, ok := cfg.Opts[config.MultisigAccountKey].(string)
 	if !ok {
-		return nil, errors.New("addressType not ok")
+		return nil, errors.New("MultisigAccountKey not ok")
 	}
 	multisigAccountBts, err := ss58.DecodeToPub(multisigAccountStr)
 	if err != nil {
 		return nil, err
 	}
 
-	otherSubAccountsStr, ok := cfg.Opts[config.OtherSubAccountsKey].([]string)
+	otherSubAccountsStrList, ok := cfg.Opts[config.OtherSubAccountsKey].([]interface{})
 	if !ok {
-		return nil, errors.New("addressType not ok")
+		return nil, errors.New("OtherSubAccountsKey not ok")
 	}
 
 	otherAccounts := make([]types.AccountID, 0)
-	for _, other := range otherSubAccountsStr {
+	for _, other := range otherSubAccountsStrList {
+		other, ok := other.(string)
+		if !ok {
+			return nil, errors.New("OtherSubAccount not ok")
+		}
 		otherBts, err := ss58.DecodeToPub(other)
 		if err != nil {
 			return nil, err

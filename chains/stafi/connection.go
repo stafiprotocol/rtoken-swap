@@ -125,6 +125,9 @@ func (c *Connection) ExistentialDeposit() (types.U128, error) {
 }
 
 func (c *Connection) GetLatestDealBlock(sym core.RSymbol) (uint64, error) {
+	if sym == core.RFISX {
+		sym = core.RFIS
+	}
 	symBz, err := types.EncodeToBytes(sym)
 	if err != nil {
 		return 0, err
@@ -178,6 +181,9 @@ func (c *Connection) GetTransInfos(sym core.RSymbol, blockNumber uint64) (*submo
 }
 
 func (c *Connection) GetSignature(symbol core.RSymbol, block uint64, proposalId []byte) ([]types.Bytes, error) {
+	if symbol == core.RFISX {
+		symbol = core.RFIS
+	}
 	symBz, err := types.EncodeToBytes(symbol)
 	if err != nil {
 		return nil, err

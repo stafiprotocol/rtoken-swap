@@ -46,6 +46,9 @@ var (
 )
 
 func NewSarpcClient(chainType, endpoint, typesPath string, log log15.Logger) (*SarpcClient, error) {
+	if chainType == "stafix" {
+		chainType = "stafi"
+	}
 	api, err := gsrpc.NewSubstrateAPI(endpoint)
 	if err != nil {
 		return nil, err
