@@ -140,7 +140,7 @@ func (l *listener) pollBlocks() error {
 
 func (l *listener) processTransInfos(infos *submodel.TransInfoList) error {
 
-	switch l.care {
+	switch infos.DestSymbol {
 	case core.RATOM:
 		//check transinfo is not deal
 		for _, transInfo := range infos.List {
@@ -150,15 +150,16 @@ func (l *listener) processTransInfos(infos *submodel.TransInfoList) error {
 		}
 		msg := &core.Message{Destination: l.care, Reason: core.NewTransInfos, Content: infos}
 		return l.submitWriteMessage(msg)
-	case core.RDOT, core.RKSM:
+	case core.RDOT, core.RKSM, core.RFISX:
 		needDeal := false
 		for i, transInfo := range infos.List {
 			if !transInfo.IsDeal {
 				needDeal = true
 				infoSingle := submodel.TransInfoSingle{
-					Block: infos.Block,
-					Index: uint32(i),
-					Info:  transInfo,
+					Block:      infos.Block,
+					Index:      uint32(i),
+					DestSymbol: infos.DestSymbol,
+					Info:       transInfo,
 				}
 				msg := &core.Message{Destination: l.care, Reason: core.NewTransInfoSingle, Content: &infoSingle}
 				err := l.submitWriteMessage(msg)

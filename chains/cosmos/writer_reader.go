@@ -89,6 +89,10 @@ func (w *writer) processNewTransInfos(m *core.Message) bool {
 		w.printContentError(m, errors.New("msg cast to traninfo not ok"))
 		return false
 	}
+	if transInfoList.DestSymbol != core.RATOM {
+		w.printContentError(m, errors.New("traninfo dest symbol != RATOM"))
+		return false
+	}
 	// check block is deal
 	isDeal, err := w.checkDeal(transInfoList.Block)
 	if err != nil {
@@ -184,7 +188,7 @@ func (w *writer) processNewTransInfos(m *core.Message) bool {
 	}
 
 	return w.checkAndSend(poolClient, txHash, txBts, transInfoList.Block)
-} 
+}
 
 func (w *writer) getSubmitSignature(symbol core.RSymbol, block uint64, proposalId []byte) ([][]byte, error) {
 	getSigsParam := submodel.GetSignaturesParam{

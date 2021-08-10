@@ -5,7 +5,7 @@
       "rsymbol": "RFIS",
       "endpoint": "ws://127.0.0.1:9944",
       "keystorePath": "/Users/tpkeeper/gowork/stafi/rtoken-swap/keys",
-      "care": "RDOT",
+      "care": "RFISX",
       "opts": {
         "payerAccount": "35arN8keEJhSeSnpyH9Cu6CBsmGchGgJi577CxHyPUuobUhg",
         "typesPath": "/Users/tpkeeper/gowork/stafi/rtoken-swap/network/stafi.json",
@@ -14,8 +14,8 @@
       }
     },
     {
-      "name": "polkadot",
-      "rsymbol": "RDOT",
+      "name": "stafix",
+      "rsymbol": "RFISX",
       "endpoint": "ws://127.0.0.1:9944",
       "latestBlockFlag": true,
       "keystorePath": "/Users/tpkeeper/gowork/stafi/rtoken-swap/keys",
@@ -23,11 +23,11 @@
         "startBlock": "0",
         "multisigAccount": "35arN8keEJhSeSnpyH9Cu6CBsmGchGgJi577CxHyPUuobUhg",
         "subAccount": "35arN8keEJhSeSnpyH9Cu6CBsmGchGgJi577CxHyPUuobUhg",
+        "typesPath": "/Users/tpkeeper/gowork/stafi/rtoken-swap/network/polkadot.json",
         "otherSubAccounts": [
           "",
           ""
-        ],
-        "typesPath": "/Users/tpkeeper/gowork/stafi/rtoken-swap/network/polkadot.json",
+        ]
       }
     }
   ]

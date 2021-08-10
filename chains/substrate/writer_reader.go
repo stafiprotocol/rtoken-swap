@@ -110,6 +110,10 @@ func (w *writer) processNewTransferSingle(m *core.Message) bool {
 		w.printContentError(m)
 		return false
 	}
+	if transInfoSingle.DestSymbol != w.symbol {
+		w.log.Error("transinfo dest symbol != w.symbol", "destsymbol", transInfoSingle.DestSymbol, "w.symbol", w.symbol)
+		return false
+	}
 
 	balance, err := w.conn.FreeBalance(w.conn.MultisigAccount[:])
 	if err != nil {

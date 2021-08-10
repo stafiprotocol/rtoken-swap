@@ -14,6 +14,7 @@ const (
 	RATOM  = RSymbol("RATOM")
 	RSOL   = RSymbol("RSOL")
 	RMATIC = RSymbol("RMATIC")
+	RFISX  = RSymbol("RFISX")
 )
 
 func (r *RSymbol) Decode(decoder scale.Decoder) error {
@@ -24,8 +25,7 @@ func (r *RSymbol) Decode(decoder scale.Decoder) error {
 
 	switch b {
 	case 0:
-		//*r = RFIS
-		return fmt.Errorf("RSymbol decode error: %d", b)
+		*r = RFIS
 	case 1:
 		*r = RDOT
 	case 2:
@@ -46,8 +46,7 @@ func (r *RSymbol) Decode(decoder scale.Decoder) error {
 func (r RSymbol) Encode(encoder scale.Encoder) error {
 	switch r {
 	case RFIS:
-		//return encoder.PushByte(0)
-		return fmt.Errorf("RFIS not supported")
+		return encoder.PushByte(0)
 	case RDOT:
 		return encoder.PushByte(1)
 	case RKSM:

@@ -54,7 +54,6 @@ type MultiCallParam struct {
 	CallHash  string
 }
 
-
 type Receive struct {
 	Recipient []byte
 	Value     types.UCompact
@@ -87,14 +86,16 @@ type Transaction struct {
 }
 
 type TransInfoSingle struct {
-	Block uint64
-	Index uint32
-	Info  TransInfo
+	Block      uint64
+	Index      uint32
+	DestSymbol core.RSymbol
+	Info       TransInfo
 }
 
 type TransInfoList struct {
-	Block uint64
-	List  []TransInfo
+	Block      uint64
+	DestSymbol core.RSymbol
+	List       []TransInfo
 }
 
 type TransInfoKey struct {

@@ -144,8 +144,14 @@ func (c *Connection) GetLatestDealBlock(sym core.RSymbol) (uint64, error) {
 }
 
 func (c *Connection) GetTransInfos(sym core.RSymbol, blockNumber uint64) (*submodel.TransInfoList, error) {
+	searchSymbol := sym
+	//when search change to rfis
+	if sym == core.RFISX {
+		searchSymbol = core.RFIS
+	}
+
 	key := submodel.TransInfoKey{
-		Symbol: sym,
+		Symbol: searchSymbol,
 		Block:  blockNumber,
 	}
 	keyBz, err := types.EncodeToBytes(key)
@@ -163,8 +169,9 @@ func (c *Connection) GetTransInfos(sym core.RSymbol, blockNumber uint64) (*submo
 		return nil, ErrNotExist
 	}
 	ret := submodel.TransInfoList{
-		Block: blockNumber,
-		List:  transInfos,
+		Block:      blockNumber,
+		DestSymbol: sym,
+		List:       transInfos,
 	}
 
 	return &ret, nil
