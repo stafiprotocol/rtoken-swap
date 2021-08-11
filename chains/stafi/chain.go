@@ -11,7 +11,6 @@ import (
 	"rtoken-swap/core"
 
 	"github.com/ChainSafe/log15"
-	"github.com/stafiprotocol/chainbridge/utils/blockstore"
 )
 
 var ErrorTerminated = errors.New("terminated")
@@ -34,10 +33,9 @@ func InitializeChain(cfg *core.ChainConfig, logger log15.Logger, sysErr chan<- e
 	}
 
 	blk := parseStartBlock(cfg)
-	bs := new(blockstore.Blockstore)
 
 	// Setup listener & writer
-	l := NewListener(cfg.Name, cfg.Symbol, cfg.Care, cfg.Opts, blk, bs, conn, logger, stop, sysErr)
+	l := NewListener(cfg.Name, cfg.Symbol, cfg.Care, cfg.Opts, blk, conn, logger, stop, sysErr)
 	w := NewReaderWriter(cfg.Symbol, cfg.Opts, conn, logger, sysErr, stop)
 	return &Chain{cfg: cfg, conn: conn, listener: l, writer: w, stop: stop}, nil
 }

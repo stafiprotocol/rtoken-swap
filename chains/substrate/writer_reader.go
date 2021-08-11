@@ -5,6 +5,7 @@ package substrate
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"rtoken-swap/chains"
 	"rtoken-swap/core"
@@ -26,6 +27,7 @@ type writer struct {
 	router          chains.Router
 	eventMtx        sync.RWMutex
 	newMulTicsMtx   sync.RWMutex
+	threshold       int
 	events          map[string]*submodel.MultiEventFlow
 	newMultics      map[string]*submodel.EventNewMultisig
 	msgChan         chan *core.Message
@@ -35,7 +37,7 @@ type writer struct {
 	stop            <-chan int
 }
 
-func NewReaderWriter(symbol core.RSymbol, opts map[string]interface{}, conn *Connection, log log15.Logger, sysErr chan<- error, stop <-chan int) *writer {
+func NewReaderWriter(symbol core.RSymbol, opts map[string]interface{}, conn *Connection, threthold int, log log15.Logger, sysErr chan<- error, stop <-chan int) *writer {
 
 	return &writer{
 		symbol:          symbol,
@@ -44,6 +46,7 @@ func NewReaderWriter(symbol core.RSymbol, opts map[string]interface{}, conn *Con
 		sysErr:          sysErr,
 		events:          make(map[string]*submodel.MultiEventFlow),
 		newMultics:      make(map[string]*submodel.EventNewMultisig),
+		threshold:       threthold,
 		msgChan:         make(chan *core.Message, msgLimit),
 		currentChainEra: 0,
 		stop:            stop,
@@ -114,11 +117,20 @@ func (w *writer) processNewTransferSingle(m *core.Message) bool {
 		w.log.Error("transinfo dest symbol != w.symbol", "destsymbol", transInfoSingle.DestSymbol, "w.symbol", w.symbol)
 		return false
 	}
-
-	balance, err := w.conn.FreeBalance(w.conn.MultisigAccount[:])
-	if err != nil {
-		w.log.Error("FreeBalance error", "err", err, "pool", hexutil.Encode(w.conn.MultisigAccount[:]))
-		return false
+	var balance types.U128
+	var err error
+	if w.symbol == core.RFIS {
+		balance, err = w.conn.StafiFreeBalance(w.conn.MultisigAccount[:])
+		if err != nil {
+			w.log.Error("StafiFreeBalance error", "err", err, "pool", hexutil.Encode(w.conn.MultisigAccount[:]))
+			return false
+		}
+	} else {
+		balance, err = w.conn.FreeBalance(w.conn.MultisigAccount[:])
+		if err != nil {
+			w.log.Error("FreeBalance error", "err", err, "pool", hexutil.Encode(w.conn.MultisigAccount[:]))
+			return false
+		}
 	}
 	e, err := w.conn.ExistentialDeposit()
 	if err != nil {
@@ -133,9 +145,11 @@ func (w *writer) processNewTransferSingle(m *core.Message) bool {
 	}
 
 	mef := &submodel.MultiEventFlow{}
-
+	mef.Block = transInfoSingle.Block
+	mef.Index = transInfoSingle.Index
 	mef.Key = w.conn.SubKey
 	mef.Others = w.conn.OthersAccount
+	mef.Threshold = uint16(w.threshold)
 
 	call, err := w.conn.TransferCall(transInfoSingle.Info.Account[:], types.NewUCompact(transInfoSingle.Info.Value.Int))
 	if err != nil {
@@ -154,7 +168,6 @@ func (w *writer) processNewTransferSingle(m *core.Message) bool {
 	mef.NewMulCallHashs = map[string]bool{callhash: true}
 	mef.MulExeCallHashs = map[string]bool{callhash: true}
 	w.setEvents(callhash, mef)
-	w.log.Info("processNewTransferSingle: event set", "callHash", callhash)
 
 	index := transInfoSingle.Block % (uint64(len(w.conn.OthersAccount)) + 1)
 
@@ -165,8 +178,11 @@ func (w *writer) processNewTransferSingle(m *core.Message) bool {
 		return bytes.Compare(allSubAccount[i][:], allSubAccount[j][:]) > 0
 	})
 
-	if bytes.Equal(allSubAccount[index][:], w.conn.SubKey.PublicKey) {
+	w.log.Info("processNewTransferSingle: event set",
+		"callHash", callhash,
+		"select account", hex.EncodeToString(allSubAccount[index][:]))
 
+	if bytes.Equal(allSubAccount[index][:], w.conn.SubKey.PublicKey) {
 		call.TimePoint = submodel.NewOptionTimePointEmpty()
 		err = w.conn.AsMulti(mef)
 		if err != nil {
@@ -271,10 +287,11 @@ func (w *writer) processMultisigExecuted(m *core.Message) bool {
 	}
 	w.deleteEvents(flow.CallHashStr)
 	w.deleteNewMultics(flow.CallHashStr)
+	useSymbol := w.symbol
 	message := submodel.TransResultWithIndex{
-		Symbol: w.symbol,
-		Block:  0,
-		Index:  0,
+		Symbol: useSymbol,
+		Block:  evt.Block,
+		Index:  evt.Index,
 	}
 	return w.reportTransResultWithIndex(w.symbol, &message)
 }
@@ -318,12 +335,13 @@ func (w *writer) deleteNewMultics(key string) {
 }
 
 func (w *writer) reportTransResultWithIndex(source core.RSymbol, m *submodel.TransResultWithIndex) bool {
-	msg := &core.Message{Source: source, Destination: core.RFIS, Reason: core.ReportTransResultWithIndex, Content: m}
+	msg := &core.Message{Source: source, Destination: core.RFISX, Reason: core.ReportTransResultWithIndex, Content: m}
 	return w.submitWriteMessage(msg)
 }
 
 // submitMessage inserts the chainId into the msg and sends it to the router
 func (w *writer) submitWriteMessage(m *core.Message) bool {
+
 	err := w.router.SendWriteMesage(m)
 	if err != nil {
 		w.log.Error("failed to send message", "err", err)

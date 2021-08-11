@@ -12,7 +12,6 @@ import (
 	"rtoken-swap/models/submodel"
 
 	"github.com/ChainSafe/log15"
-	"github.com/stafiprotocol/chainbridge/utils/blockstore"
 )
 
 type listener struct {
@@ -20,7 +19,6 @@ type listener struct {
 	symbol       core.RSymbol
 	care         core.RSymbol
 	startBlock   uint64
-	blockstore   blockstore.Blockstorer
 	conn         *Connection
 	router       chains.Router
 	log          log15.Logger
@@ -35,13 +33,12 @@ var (
 	BlockRetryLimit    = 20
 )
 
-func NewListener(name string, symbol, care core.RSymbol, opts map[string]interface{}, startBlock uint64, bs blockstore.Blockstorer, conn *Connection, log log15.Logger, stop <-chan int, sysErr chan<- error) *listener {
+func NewListener(name string, symbol, care core.RSymbol, opts map[string]interface{}, startBlock uint64, conn *Connection, log log15.Logger, stop <-chan int, sysErr chan<- error) *listener {
 	return &listener{
 		name:         name,
 		symbol:       symbol,
 		care:         care,
 		startBlock:   startBlock,
-		blockstore:   bs,
 		conn:         conn,
 		log:          log,
 		stop:         stop,
@@ -150,7 +147,7 @@ func (l *listener) processTransInfos(infos *submodel.TransInfoList) error {
 		}
 		msg := &core.Message{Destination: l.care, Reason: core.NewTransInfos, Content: infos}
 		return l.submitWriteMessage(msg)
-	case core.RDOT, core.RKSM, core.RFISX:
+	case core.RDOT, core.RKSM, core.RFIS:
 		needDeal := false
 		for i, transInfo := range infos.List {
 			if !transInfo.IsDeal {

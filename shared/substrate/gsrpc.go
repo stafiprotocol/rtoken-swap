@@ -216,12 +216,12 @@ func (gc *GsrpcClient) NewUnsignedExtrinsic(callMethod string, args ...interface
 	gc.log.Debug("Submitting substrate call...", "callMethod", callMethod, "addressType", gc.addressType, "sender", gc.key.Address)
 	meta, err := gc.GetLatestMetadata()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("gc.GetLatestMetadata err: %s", err)
 	}
 
 	call, err := types.NewCall(meta, callMethod, args...)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("types.NewCall err:%s", err)
 	}
 
 	if gc.addressType == AddressTypeAccountId {
@@ -238,7 +238,7 @@ func (gc *GsrpcClient) NewUnsignedExtrinsic(callMethod string, args ...interface
 func (gc *GsrpcClient) SignAndSubmitTx(ext interface{}) error {
 	err := gc.signExtrinsic(ext)
 	if err != nil {
-		return err
+		return fmt.Errorf("gc.signExtrinsic err: %s", err)
 	}
 
 	api, err := gc.FlashApi()
@@ -248,7 +248,7 @@ func (gc *GsrpcClient) SignAndSubmitTx(ext interface{}) error {
 	// Do the transfer and track the actual status
 	sub, err := api.RPC.Author.SubmitAndWatch(ext)
 	if err != nil {
-		return err
+		return fmt.Errorf("Author.SubmitAndWatch err:%s", err)
 	}
 	gc.log.Trace("Extrinsic submission succeeded")
 	defer sub.Unsubscribe()
@@ -283,12 +283,12 @@ func (gc *GsrpcClient) watchSubmission(sub *author.ExtrinsicStatusSubscription) 
 func (gc *GsrpcClient) signExtrinsic(xt interface{}) error {
 	rv, err := gc.GetLatestRuntimeVersion()
 	if err != nil {
-		return err
+		return fmt.Errorf("gc.GetLatestRuntimeVersion err: %s", err)
 	}
 
 	nonce, err := gc.GetLatestNonce()
 	if err != nil {
-		return err
+		return fmt.Errorf("gc.GetLatestNonce err: %s", err)
 	}
 
 	o := types.SignatureOptions{
@@ -311,7 +311,7 @@ func (gc *GsrpcClient) signExtrinsic(xt interface{}) error {
 		gc.log.Info("signExtrinsic", "addressType1", gc.addressType)
 		err = ext.Sign(*gc.key, o)
 		if err != nil {
-			return err
+			return fmt.Errorf("ext.Sign err:%s", err)
 		}
 	} else {
 		return errors.New("extrinsic cast error")
@@ -439,6 +439,15 @@ func (gc *GsrpcClient) NominateCall(validators []types.Bytes) (*submodel.MultiOp
 	}
 
 	return OpaqueCall(ext)
+}
+
+func (gc *GsrpcClient) StafiFreeBalance(who []byte) (types.U128, error) {
+	info, err := gc.AccountInfo(who)
+	if err != nil {
+		return types.U128{}, err
+	}
+
+	return info.Data.Free, nil
 }
 
 func (gc *GsrpcClient) FreeBalance(who []byte) (types.U128, error) {

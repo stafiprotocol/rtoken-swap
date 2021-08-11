@@ -4,8 +4,10 @@
 package substrate
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"sort"
 	"time"
 
 	"rtoken-swap/config"
@@ -85,6 +87,12 @@ func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*C
 		otherAccounts = append(otherAccounts, types.NewAccountID(otherBts))
 	}
 
+	sort.SliceStable(otherAccounts, func(i, j int) bool {
+		return bytes.Compare(otherAccounts[i][:], otherAccounts[j][:]) < 0
+	})
+
+	log.Info("other accounts", "accounts", otherAccounts)
+
 	sc, err := substrate.NewSarpcClient(cfg.Name, cfg.Endpoint, path, log)
 	if err != nil {
 		return nil, err
@@ -95,7 +103,7 @@ func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*C
 		return nil, fmt.Errorf("keypairFromAddress err: %s", err)
 	}
 	krp := kp.(*sr25519.Keypair).AsKeyringPair()
-	gc, err := substrate.NewGsrpcClient(cfg.Endpoint, "MultiAddress", krp, log, stop)
+	gc, err := substrate.NewGsrpcClient(cfg.Endpoint, "AccountId", krp, log, stop)
 	if err != nil {
 		return nil, fmt.Errorf("substrate.NewGsrpcClient err %s", err)
 	}
@@ -148,6 +156,10 @@ func (c *Connection) LatestMetadata() (*types.Metadata, error) {
 
 func (c *Connection) FreeBalance(who []byte) (types.U128, error) {
 	return c.gc.FreeBalance(who)
+}
+
+func (c *Connection) StafiFreeBalance(who []byte) (types.U128, error) {
+	return c.gc.StafiFreeBalance(who)
 }
 
 func (c *Connection) ExistentialDeposit() (types.U128, error) {

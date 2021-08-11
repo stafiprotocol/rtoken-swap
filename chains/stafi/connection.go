@@ -48,11 +48,6 @@ func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*C
 		return nil, errors.New("no typesPath")
 	}
 
-	addressType, ok := cfg.Opts[config.AddressTypeKey].(string)
-	if !ok {
-		return nil, errors.New("addressType not ok")
-	}
-
 	payerAccount, ok := cfg.Opts[config.PayerAccountKey].(string)
 	if !ok {
 		return nil, errors.New("addressType not ok")
@@ -68,7 +63,7 @@ func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*C
 		return nil, fmt.Errorf("keypairFromAddress err: %s", err)
 	}
 	krp := kp.(*sr25519.Keypair).AsKeyringPair()
-	gc, err := substrate.NewGsrpcClient(cfg.Endpoint, addressType, krp, log, stop)
+	gc, err := substrate.NewGsrpcClient(cfg.Endpoint, "AccountId", krp, log, stop)
 	if err != nil {
 		return nil, fmt.Errorf("substrate.NewGsrpcClient err %s", err)
 	}
@@ -125,9 +120,6 @@ func (c *Connection) ExistentialDeposit() (types.U128, error) {
 }
 
 func (c *Connection) GetLatestDealBlock(sym core.RSymbol) (uint64, error) {
-	if sym == core.RFISX {
-		sym = core.RFIS
-	}
 	symBz, err := types.EncodeToBytes(sym)
 	if err != nil {
 		return 0, err
@@ -148,11 +140,6 @@ func (c *Connection) GetLatestDealBlock(sym core.RSymbol) (uint64, error) {
 
 func (c *Connection) GetTransInfos(sym core.RSymbol, blockNumber uint64) (*submodel.TransInfoList, error) {
 	searchSymbol := sym
-	//when search change to rfis
-	if sym == core.RFISX {
-		searchSymbol = core.RFIS
-	}
-
 	key := submodel.TransInfoKey{
 		Symbol: searchSymbol,
 		Block:  blockNumber,
@@ -181,9 +168,6 @@ func (c *Connection) GetTransInfos(sym core.RSymbol, blockNumber uint64) (*submo
 }
 
 func (c *Connection) GetSignature(symbol core.RSymbol, block uint64, proposalId []byte) ([]types.Bytes, error) {
-	if symbol == core.RFISX {
-		symbol = core.RFIS
-	}
 	symBz, err := types.EncodeToBytes(symbol)
 	if err != nil {
 		return nil, err

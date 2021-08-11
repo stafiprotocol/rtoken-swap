@@ -120,7 +120,7 @@ func run(ctx *cli.Context) error {
 		logger := log.Root().New("chain", chainConfig.Name)
 
 		switch chain.Name {
-		case "stafi":
+		case "stafix":
 			newChain, err = stafi.InitializeChain(chainConfig, logger, sysErr)
 			if err != nil {
 				return err
@@ -130,7 +130,7 @@ func run(ctx *cli.Context) error {
 			if err != nil {
 				return err
 			}
-		case "polkadot", "kusama", "stafix":
+		case "polkadot", "kusama", "stafi":
 			newChain, err = substrate.InitializeChain(chainConfig, logger, sysErr)
 			if err != nil {
 				return err

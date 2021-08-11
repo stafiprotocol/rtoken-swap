@@ -43,10 +43,18 @@ func InitializeChain(cfg *core.ChainConfig, logger log15.Logger, sysErr chan<- e
 	} else {
 		useStartBlock = startBlock
 	}
+	thresholdStr, ok := cfg.Opts[config.ThresholdKey].(string)
+	if !ok {
+		return nil, errors.New("config must has threshold")
+	}
+	threshold, err := strconv.Atoi(thresholdStr)
+	if err != nil {
+		return nil, err
+	}
 
 	// Setup listener & writer
 	l := NewListener(cfg.Name, cfg.Symbol, useStartBlock, conn, logger, stop, sysErr)
-	w := NewReaderWriter(cfg.Symbol, cfg.Opts, conn, logger, sysErr, stop)
+	w := NewReaderWriter(cfg.Symbol, cfg.Opts, conn, threshold, logger, sysErr, stop)
 	return &Chain{cfg: cfg, conn: conn, listener: l, writer: w, stop: stop}, nil
 }
 

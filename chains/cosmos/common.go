@@ -144,7 +144,7 @@ func (w *writer) checkAndSend(poolClient *cosmos.PoolClient, txHash, txBts []byt
 			Symbol: core.RATOM,
 			Block:  block,
 		}
-		return w.reportTransResultWithBlock(core.RATOM, core.RFIS, &report)
+		return w.reportTransResultWithBlock(core.RATOM, core.RFISX, &report)
 
 	}
 	return false

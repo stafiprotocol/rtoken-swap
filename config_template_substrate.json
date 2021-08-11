@@ -1,8 +1,8 @@
 {
   "chains": [
     {
-      "name": "stafi",
-      "rsymbol": "RFIS",
+      "name": "stafix",
+      "rsymbol": "RFISX",
       "endpoint": "ws://127.0.0.1:9944",
       "keystorePath": "/Users/tpkeeper/gowork/stafi/rtoken-swap/keys",
       "care": "RFISX",
@@ -14,8 +14,8 @@
       }
     },
     {
-      "name": "stafix",
-      "rsymbol": "RFISX",
+      "name": "stafi",
+      "rsymbol": "RFIS",
       "endpoint": "ws://127.0.0.1:9944",
       "latestBlockFlag": true,
       "keystorePath": "/Users/tpkeeper/gowork/stafi/rtoken-swap/keys",

@@ -14,6 +14,8 @@ type MultiEventFlow struct {
 	EventId         string
 	Symbol          core.RSymbol
 	EventData       interface{}
+	Block           uint64
+	Index           uint32
 	Threshold       uint16
 	SubAccounts     []types.Bytes
 	Key             *signature.KeyringPair
