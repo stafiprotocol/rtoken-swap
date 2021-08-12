@@ -1,4 +1,4 @@
-package stafi_test
+package stafix_test
 
 import (
 	"fmt"

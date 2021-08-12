@@ -103,7 +103,11 @@ func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*C
 		return nil, fmt.Errorf("keypairFromAddress err: %s", err)
 	}
 	krp := kp.(*sr25519.Keypair).AsKeyringPair()
-	gc, err := substrate.NewGsrpcClient(cfg.Endpoint, "AccountId", krp, log, stop)
+	accountType := substrate.AddressTypeAccountId
+	if cfg.Symbol != core.RFIS {
+		accountType = substrate.AddressTypeMultiAddress
+	}
+	gc, err := substrate.NewGsrpcClient(cfg.Endpoint, accountType, krp, log, stop)
 	if err != nil {
 		return nil, fmt.Errorf("substrate.NewGsrpcClient err %s", err)
 	}

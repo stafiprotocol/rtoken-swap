@@ -8,7 +8,7 @@ import (
 	"rtoken-swap/chains/cosmos"
 	"rtoken-swap/chains/substrate"
 
-	"rtoken-swap/chains/stafi"
+	"rtoken-swap/chains/stafix"
 	"rtoken-swap/config"
 	"rtoken-swap/core"
 
@@ -121,7 +121,7 @@ func run(ctx *cli.Context) error {
 
 		switch chain.Name {
 		case "stafix":
-			newChain, err = stafi.InitializeChain(chainConfig, logger, sysErr)
+			newChain, err = stafix.InitializeChain(chainConfig, logger, sysErr)
 			if err != nil {
 				return err
 			}

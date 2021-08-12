@@ -117,21 +117,13 @@ func (w *writer) processNewTransferSingle(m *core.Message) bool {
 		w.log.Error("transinfo dest symbol != w.symbol", "destsymbol", transInfoSingle.DestSymbol, "w.symbol", w.symbol)
 		return false
 	}
-	var balance types.U128
-	var err error
-	if w.symbol == core.RFIS {
-		balance, err = w.conn.StafiFreeBalance(w.conn.MultisigAccount[:])
-		if err != nil {
-			w.log.Error("StafiFreeBalance error", "err", err, "pool", hexutil.Encode(w.conn.MultisigAccount[:]))
-			return false
-		}
-	} else {
-		balance, err = w.conn.FreeBalance(w.conn.MultisigAccount[:])
-		if err != nil {
-			w.log.Error("FreeBalance error", "err", err, "pool", hexutil.Encode(w.conn.MultisigAccount[:]))
-			return false
-		}
+
+	balance, err := w.conn.FreeBalance(w.conn.MultisigAccount[:])
+	if err != nil {
+		w.log.Error("FreeBalance error", "err", err, "pool", hexutil.Encode(w.conn.MultisigAccount[:]))
+		return false
 	}
+
 	e, err := w.conn.ExistentialDeposit()
 	if err != nil {
 		w.log.Error("ExistentialDeposit error", "err", err, "pool", hexutil.Encode(w.conn.MultisigAccount[:]))
@@ -151,7 +143,7 @@ func (w *writer) processNewTransferSingle(m *core.Message) bool {
 	mef.Others = w.conn.OthersAccount
 	mef.Threshold = uint16(w.threshold)
 
-	call, err := w.conn.TransferCall(transInfoSingle.Info.Account[:], types.NewUCompact(transInfoSingle.Info.Value.Int))
+	call, err := w.conn.TransferCall(transInfoSingle.Info.Receiver[:], types.NewUCompact(transInfoSingle.Info.Value.Int))
 	if err != nil {
 		w.log.Error("TransferCall error", "symbol", m.Source)
 		return false
