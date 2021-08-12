@@ -163,7 +163,15 @@ func (l *listener) processTransInfos(infos *submodel.TransInfoList) error {
 				if err != nil {
 					return fmt.Errorf("submitWriteMessage %s", err)
 				}
-				//todo wait until pre is deal ,then continue to deal next
+				// wait until pre is deal ,then continue to deal next
+				for {
+					isDeal, err := l.conn.TransInfoIsDeal(infos.DestSymbol, infos.Block, i)
+					if err == nil && isDeal {
+						l.log.Warn("TransInfo still not deal", "symbol", infos.DestSymbol, "block", infos.Block, "index", i)
+						break
+					}
+					time.Sleep(BlockRetryInterval)
+				}
 			}
 		}
 		//if no need to deal, it should't happend here

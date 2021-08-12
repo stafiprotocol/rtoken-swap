@@ -167,6 +167,33 @@ func (c *Connection) GetTransInfos(sym core.RSymbol, blockNumber uint64) (*submo
 	return &ret, nil
 }
 
+func (c *Connection) TransInfoIsDeal(sym core.RSymbol, blockNumber uint64, index int) (bool, error) {
+	searchSymbol := sym
+	key := submodel.TransInfoKey{
+		Symbol: searchSymbol,
+		Block:  blockNumber,
+	}
+	keyBz, err := types.EncodeToBytes(key)
+	if err != nil {
+		return false, err
+	}
+
+	var transInfos []submodel.TransInfo
+	exists, err := c.QueryStorage(config.RDexnSwapModuleId, config.StorageTransInfos, keyBz, nil, &transInfos)
+	if err != nil {
+		return false, err
+	}
+
+	if !exists {
+		return false, ErrNotExist
+	}
+
+	if len(transInfos)-1 < int(index) {
+		return false, errors.New("out of index")
+	}
+	return transInfos[index].IsDeal, nil
+}
+
 func (c *Connection) GetSignature(symbol core.RSymbol, block uint64, proposalId []byte) ([]types.Bytes, error) {
 	symBz, err := types.EncodeToBytes(symbol)
 	if err != nil {
