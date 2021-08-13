@@ -119,7 +119,7 @@ func (l *listener) pollBlocks() error {
 			}
 			//process if has some transInfos
 			if err == nil && len(transInfos.List) > 0 {
-				l.log.Info("processTransInfos", "info", transInfos)
+				l.log.Info("get new transInfos", "trans block", transInfos.Block, "dest", transInfos.DestSymbol)
 				err := l.processTransInfos(transInfos)
 				if err != nil {
 					panic(err)
@@ -142,7 +142,7 @@ func (l *listener) processTransInfos(infos *submodel.TransInfoList) error {
 		//check transinfo is not deal
 		for _, transInfo := range infos.List {
 			if transInfo.IsDeal {
-				return fmt.Errorf("transInfo must all not deal, symbol: %s block: %d", l.care, infos.Block)
+				return fmt.Errorf("transInfo must all is not deal, symbol: %s block: %d", l.care, infos.Block)
 			}
 		}
 		msg := &core.Message{Destination: l.care, Reason: core.NewTransInfos, Content: infos}
@@ -167,16 +167,17 @@ func (l *listener) processTransInfos(infos *submodel.TransInfoList) error {
 				for {
 					isDeal, err := l.conn.TransInfoIsDeal(infos.DestSymbol, infos.Block, i)
 					if err == nil && isDeal {
-						l.log.Warn("TransInfo still not deal", "symbol", infos.DestSymbol, "block", infos.Block, "index", i)
+						l.log.Info("TransInfoSingle has deal", "symbol", infos.DestSymbol, "block", infos.Block, "index", i)
 						break
 					}
+					l.log.Warn("TransInfoSingle still not deal, will wait...", "symbol", infos.DestSymbol, "block", infos.Block, "index", i)
 					time.Sleep(BlockRetryInterval)
 				}
 			}
 		}
 		//if no need to deal, it should't happend here
 		if !needDeal {
-			return fmt.Errorf("transInfoList must has info that need deal, symbol:%s block:%d", l.care, infos.Block)
+			return fmt.Errorf("transInfoList must has transInfo that is not deal, symbol:%s block:%d", l.care, infos.Block)
 		}
 		return nil
 	default:
