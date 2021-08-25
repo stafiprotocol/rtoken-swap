@@ -14,7 +14,7 @@ const (
 	RATOM  = RSymbol("RATOM")
 	RSOL   = RSymbol("RSOL")
 	RMATIC = RSymbol("RMATIC")
-	RFISX  = RSymbol("RFISX")
+	FIS    = RSymbol("FIS")
 )
 
 func (r *RSymbol) Decode(decoder scale.Decoder) error {

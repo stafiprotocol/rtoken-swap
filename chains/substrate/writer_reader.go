@@ -327,7 +327,7 @@ func (w *writer) deleteNewMultics(key string) {
 }
 
 func (w *writer) reportTransResultWithIndex(source core.RSymbol, m *submodel.TransResultWithIndex) bool {
-	msg := &core.Message{Source: source, Destination: core.RFISX, Reason: core.ReportTransResultWithIndex, Content: m}
+	msg := &core.Message{Source: source, Destination: core.FIS, Reason: core.ReportTransResultWithIndex, Content: m}
 	return w.submitWriteMessage(msg)
 }
 

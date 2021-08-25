@@ -2,7 +2,7 @@
   "chains": [
     {
       "name": "stafix",
-      "rsymbol": "RFISX",
+      "rsymbol": "FIS",
       "endpoint": "ws://127.0.0.1:9944",
       "keystorePath": "/Users/tpkeeper/gowork/stafi/rtoken-swap/keys",
       "care": "RFIS",
@@ -23,7 +23,7 @@
         "multisigAccount": "35ZqpqxKChbbXKmVuhD9RT3KVz24LrAwZLFYZBRxDF2tTMQw",
         "subAccount": "35gd2zQzugNJEdHwj5xgUsRoF7iEyWgbfiPLoP7qQdc7ouQ8",
         "typesPath": "/Users/tpkeeper/gowork/stafi/rtoken-swap/network/stafi.json",
-        "threshold":"2",
+        "threshold": "2",
         "otherSubAccounts": [
           "33k7kRTjq8EMeMeFJTeZ5TW5Yaxs4ZfQsJuNe6QrTZ1vu37Z",
           "31DWJ3PdXmVDYpxdBgTbqSwMtwJ9wFpdfHt7baroPeo94hWA"
