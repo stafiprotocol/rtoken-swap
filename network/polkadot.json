@@ -92,7 +92,7 @@
       "NonTransfer",
       "Governance",
       "Staking",
-      "Deprertoken-swapedSudoBalances",
+      "DeprecatedSudoBalances",
       "IdentityJudgement",
       "CancelProxy"
     ]
