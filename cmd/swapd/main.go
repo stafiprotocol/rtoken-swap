@@ -30,9 +30,8 @@ var generateFlags = []cli.Flag{
 
 var accountCommand = cli.Command{
 	Name:  "accounts",
-	Usage: "manage reth keystore",
-	Description: "The accounts command is used to manage the reth keystore.\n" +
-		"\tTo generate a ethereum keystore: chainbridge accounts geneth\n",
+	Usage: "manage keystores",
+	Description: "The accounts command is used to manage the keystore.\n",
 	Subcommands: []*cli.Command{
 		{
 			Action: wrapHandler(handleGenerateSubCmd),

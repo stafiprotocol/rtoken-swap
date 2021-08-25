@@ -30,7 +30,7 @@ type listener struct {
 // Frequency of polling for a new block
 var (
 	BlockRetryInterval = time.Second * 6
-	BlockRetryLimit    = 20
+	BlockRetryLimit    = 50
 )
 
 func NewListener(name string, symbol, care core.RSymbol, opts map[string]interface{}, startBlock uint64, conn *Connection, log log15.Logger, stop <-chan int, sysErr chan<- error) *listener {
@@ -164,13 +164,19 @@ func (l *listener) processTransInfos(infos *submodel.TransInfoList) error {
 					return fmt.Errorf("submitWriteMessage %s", err)
 				}
 				// wait until pre is deal ,then continue to deal next
+				retry := 0
 				for {
+					if retry > BlockRetryLimit {
+						return fmt.Errorf("l.conn.TransInfoIsDeal reach retry limit, dest symbol:%s,block:%d,index:%d",
+							infos.DestSymbol, infos.Block, i)
+					}
 					isDeal, err := l.conn.TransInfoIsDeal(infos.DestSymbol, infos.Block, i)
 					if err == nil && isDeal {
 						l.log.Info("TransInfoSingle has deal", "symbol", infos.DestSymbol, "block", infos.Block, "index", i)
 						break
 					}
 					l.log.Warn("TransInfoSingle still not deal, will wait...", "symbol", infos.DestSymbol, "block", infos.Block, "index", i)
+					retry++
 					time.Sleep(BlockRetryInterval)
 				}
 			}
