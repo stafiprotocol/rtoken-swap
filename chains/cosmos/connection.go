@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	BlockRetryLimit    = 50
+	BlockRetryLimit    = 100
 	BlockRetryInterval = time.Second * 6
 	BlockConfirmNumber = 10
 )
