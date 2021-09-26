@@ -315,7 +315,7 @@ func (c *Connection) submitSignature(param *submodel.SubmitSignatureParams) bool
 		}
 		return true
 	}
-	return true
+	return false
 }
 
 func (c *Connection) reportTransResultWithBlock(symbol core.RSymbol, block uint64) bool {
@@ -339,7 +339,7 @@ func (c *Connection) reportTransResultWithBlock(symbol core.RSymbol, block uint6
 		}
 		return true
 	}
-	return true
+	return false
 }
 
 func (c *Connection) reportTransResultWithIndex(symbol core.RSymbol, block uint64, index uint32) bool {
@@ -363,5 +363,5 @@ func (c *Connection) reportTransResultWithIndex(symbol core.RSymbol, block uint6
 		}
 		return true
 	}
-	return true
+	return false
 }

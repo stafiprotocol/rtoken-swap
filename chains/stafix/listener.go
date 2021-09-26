@@ -30,7 +30,7 @@ type listener struct {
 // Frequency of polling for a new block
 var (
 	BlockRetryInterval = time.Second * 6
-	BlockRetryLimit    = 50
+	BlockRetryLimit    = 100
 )
 
 func NewListener(name string, symbol, care core.RSymbol, opts map[string]interface{}, startBlock uint64, conn *Connection, log log15.Logger, stop <-chan int, sysErr chan<- error) *listener {
