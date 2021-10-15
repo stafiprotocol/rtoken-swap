@@ -145,7 +145,7 @@ func (l *listener) processTransInfos(infos *submodel.TransInfoList) error {
 				return fmt.Errorf("transInfo must all is not deal, symbol: %s block: %d", l.care, infos.Block)
 			}
 		}
-		msg := &core.Message{Destination: l.care, Reason: core.NewTransInfos, Content: infos}
+		msg := &core.Message{Destination: infos.DestSymbol, Reason: core.NewTransInfos, Content: infos}
 		return l.submitWriteMessage(msg)
 	case core.RDOT, core.RKSM, core.RFIS:
 		needDeal := false
@@ -158,7 +158,7 @@ func (l *listener) processTransInfos(infos *submodel.TransInfoList) error {
 					DestSymbol: infos.DestSymbol,
 					Info:       transInfo,
 				}
-				msg := &core.Message{Destination: l.care, Reason: core.NewTransInfoSingle, Content: &infoSingle}
+				msg := &core.Message{Destination: infos.DestSymbol, Reason: core.NewTransInfoSingle, Content: &infoSingle}
 				err := l.submitWriteMessage(msg)
 				if err != nil {
 					return fmt.Errorf("submitWriteMessage %s", err)

@@ -34,7 +34,6 @@ type Connection struct {
 	SubKey          *signature.KeyringPair
 	OthersAccount   []types.AccountID
 	sc              *substrate.SarpcClient
-	gc              *substrate.GsrpcClient
 	log             log15.Logger
 	stop            <-chan int
 }
@@ -93,23 +92,24 @@ func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*C
 
 	log.Info("other accounts", "accounts", otherAccounts)
 
-	sc, err := substrate.NewSarpcClient(cfg.Name, cfg.Endpoint, path, log)
-	if err != nil {
-		return nil, err
-	}
-
 	kp, err := keystore.KeypairFromAddress(subAccount, keystore.SubChain, cfg.KeystorePath, cfg.Insecure)
 	if err != nil {
 		return nil, fmt.Errorf("keypairFromAddress err: %s", err)
 	}
 	krp := kp.(*sr25519.Keypair).AsKeyringPair()
-	accountType := substrate.AddressTypeAccountId
-	if cfg.Symbol != core.RFIS {
-		accountType = substrate.AddressTypeMultiAddress
+
+	chainType := ""
+	switch cfg.Name {
+	case "stafix", "stafi":
+		chainType = substrate.ChainTypeStafi
+	case "polkadot", "kusama":
+		chainType = substrate.ChainTypePolkadot
+	default:
+		return nil, fmt.Errorf("chain type err")
 	}
-	gc, err := substrate.NewGsrpcClient(cfg.Endpoint, accountType, krp, log, stop)
+	sc, err := substrate.NewSarpcClient(chainType, cfg.Endpoint, path, substrate.AddressTypeMultiAddress, krp, log, stop)
 	if err != nil {
-		return nil, fmt.Errorf("substrate.NewGsrpcClient err %s", err)
+		return nil, err
 	}
 
 	return &Connection{
@@ -121,24 +121,23 @@ func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*C
 		MultisigAccount: types.NewAccountID(multisigAccountBts),
 		OthersAccount:   otherAccounts,
 		sc:              sc,
-		gc:              gc,
 	}, nil
 }
 
 func (c *Connection) GetBlockNumber(hash types.Hash) (uint64, error) {
-	return c.gc.GetBlockNumber(hash)
+	return c.sc.GetBlockNumber(hash)
 }
 
 func (c *Connection) LatestBlockNumber() (uint64, error) {
-	return c.gc.GetLatestBlockNumber()
+	return c.sc.GetLatestBlockNumber()
 }
 
 func (c *Connection) FinalizedBlockNumber() (uint64, error) {
-	return c.gc.GetFinalizedBlockNumber()
+	return c.sc.GetFinalizedBlockNumber()
 }
 
 func (c *Connection) Address() string {
-	return c.gc.Address()
+	return c.sc.Address()
 }
 
 func (c *Connection) GetEvents(blockNum uint64) ([]*submodel.ChainEvent, error) {
@@ -147,27 +146,19 @@ func (c *Connection) GetEvents(blockNum uint64) ([]*submodel.ChainEvent, error) 
 
 // queryStorage performs a storage lookup. Arguments may be nil, result must be a pointer.
 func (c *Connection) QueryStorage(prefix, method string, arg1, arg2 []byte, result interface{}) (bool, error) {
-	return c.gc.QueryStorage(prefix, method, arg1, arg2, result)
+	return c.sc.QueryStorage(prefix, method, arg1, arg2, result)
 }
 
 func (c *Connection) GetExtrinsics(blockhash string) ([]*submodel.Transaction, error) {
 	return c.sc.GetExtrinsics(blockhash)
 }
 
-func (c *Connection) LatestMetadata() (*types.Metadata, error) {
-	return c.gc.GetLatestMetadata()
-}
-
 func (c *Connection) FreeBalance(who []byte) (types.U128, error) {
-	return c.gc.FreeBalance(who)
-}
-
-func (c *Connection) StafiFreeBalance(who []byte) (types.U128, error) {
-	return c.gc.StafiFreeBalance(who)
+	return c.sc.FreeBalance(who)
 }
 
 func (c *Connection) ExistentialDeposit() (types.U128, error) {
-	return c.gc.ExistentialDeposit()
+	return c.sc.ExistentialDeposit()
 }
 
 func (c *Connection) GetLatestDealBlock(sym core.RSymbol) (uint64, error) {
@@ -245,7 +236,7 @@ func (c *Connection) GetSignature(symbol core.RSymbol, block uint64, proposalId 
 }
 
 func (c *Connection) TransferCall(recipient []byte, value types.UCompact) (*submodel.MultiOpaqueCall, error) {
-	return c.gc.TransferCall(recipient, value)
+	return c.sc.TransferCall(recipient, value)
 }
 
 func (c *Connection) PaymentQueryInfo(ext string) (info *rpc.PaymentQueryInfo, err error) {
@@ -277,7 +268,7 @@ func (c *Connection) AsMulti(flow *submodel.MultiEventFlow) error {
 }
 
 func (c *Connection) asMulti(flow *submodel.MultiEventFlow) error {
-	gc := c.gc
+	gc := c.sc
 	if gc == nil {
 		panic(fmt.Sprintf("key disappear: %s, symbol: %s", hexutil.Encode(flow.Key.PublicKey), c.symbol))
 	}
@@ -295,7 +286,7 @@ func (c *Connection) asMulti(flow *submodel.MultiEventFlow) error {
 
 	calls := make([]types.Call, 0)
 	for _, oc := range flow.OpaqueCalls {
-		ext, err := c.gc.NewUnsignedExtrinsic(config.MethodAsMulti, flow.Threshold, flow.Others, oc.TimePoint, oc.Opaque, false, flow.PaymentInfo.Weight)
+		ext, err := c.sc.NewUnsignedExtrinsic(config.MethodAsMulti, flow.Threshold, flow.Others, oc.TimePoint, oc.Opaque, false, flow.PaymentInfo.Weight)
 		if err != nil {
 			return err
 		}

@@ -7,19 +7,22 @@ import (
 	"io/ioutil"
 	"time"
 
-	"rtoken-swap/models/submodel"
-	wbskt "rtoken-swap/shared/substrate/websocket"
-	"rtoken-swap/types/polkadot"
-	"rtoken-swap/types/stafi"
-
 	"github.com/ChainSafe/log15"
 	"github.com/gorilla/websocket"
+	scale "github.com/itering/scale.go"
 	"github.com/itering/scale.go/source"
+	scaleTypes "github.com/itering/scale.go/types"
 	"github.com/itering/scale.go/utiles"
 	"github.com/itering/substrate-api-rpc/pkg/recws"
 	"github.com/itering/substrate-api-rpc/rpc"
 	"github.com/itering/substrate-api-rpc/util"
 	gsrpc "github.com/stafiprotocol/go-substrate-rpc-client"
+	gsrpcConfig "github.com/stafiprotocol/go-substrate-rpc-client/config"
+	"github.com/stafiprotocol/go-substrate-rpc-client/signature"
+	"github.com/stafiprotocol/go-substrate-rpc-client/types"
+	"rtoken-swap/models/submodel"
+	wbskt "rtoken-swap/shared/substrate/websocket"
+	"rtoken-swap/types/stafi"
 )
 
 const (
@@ -28,7 +31,13 @@ const (
 )
 
 type SarpcClient struct {
-	endpoint           string
+	endpoint    string
+	addressType string
+	api         *gsrpc.SubstrateAPI
+	key         *signature.KeyringPair
+	genesisHash types.Hash
+	stop        <-chan int
+
 	wsPool             wbskt.Pool
 	log                log15.Logger
 	chainType          string
@@ -36,29 +45,39 @@ type SarpcClient struct {
 	typesPath          string
 	currentSpecVersion int
 	metaDecoder        interface{}
+	metaDataVersion    int
 }
 
 var (
 	metaDecoders = map[string]interface{}{
 		ChainTypeStafi:    &stafi.MetadataDecoder{},
-		ChainTypePolkadot: &polkadot.MetadataDecoder{},
+		ChainTypePolkadot: &scale.MetadataDecoder{},
 	}
 )
 
-func NewSarpcClient(chainType, endpoint, typesPath string, log log15.Logger) (*SarpcClient, error) {
-	if chainType == "stafix" {
-		chainType = "stafi"
+func NewSarpcClient(chainType, endpoint, typesPath, addressType string, key *signature.KeyringPair, log log15.Logger, stop <-chan int) (*SarpcClient, error) {
+	log.Info("Connecting to substrate chain with sarpc", "endpoint", endpoint)
+
+	if addressType != AddressTypeAccountId && addressType != AddressTypeMultiAddress {
+		return nil, errors.New("addressType not supported")
 	}
+
 	api, err := gsrpc.NewSubstrateAPI(endpoint)
 	if err != nil {
 		return nil, err
 	}
 
+	gsrpcConfig.SetSubscribeTimeout(2 * time.Minute)
 	latestHash, err := api.RPC.Chain.GetFinalizedHead()
 	if err != nil {
 		return nil, err
 	}
 	log.Info("NewSarpcClient", "latestHash", latestHash.Hex())
+
+	genesisHash, err := api.RPC.Chain.GetBlockHash(0)
+	if err != nil {
+		return nil, err
+	}
 
 	md := metaDecoders[chainType]
 	if md == nil {
@@ -66,8 +85,13 @@ func NewSarpcClient(chainType, endpoint, typesPath string, log log15.Logger) (*S
 	}
 
 	sc := &SarpcClient{
-		chainType:          chainType,
 		endpoint:           endpoint,
+		chainType:          chainType,
+		addressType:        addressType,
+		api:                api,
+		key:                key,
+		genesisHash:        genesisHash,
+		stop:               stop,
 		wsPool:             nil,
 		log:                log,
 		metaRaw:            "",
@@ -97,8 +121,8 @@ func (sc *SarpcClient) regCustomTypes() {
 		stafi.RuntimeType{}.Reg()
 		stafi.RegCustomTypes(source.LoadTypeRegistry(content))
 	case ChainTypePolkadot:
-		polkadot.RuntimeType{}.Reg()
-		polkadot.RegCustomTypes(source.LoadTypeRegistry(content))
+		scaleTypes.RuntimeType{}.Reg()
+		scaleTypes.RegCustomTypes(source.LoadTypeRegistry(content))
 	default:
 		panic("chainType not supported")
 	}
@@ -181,12 +205,14 @@ func (sc *SarpcClient) UpdateMeta(blockHash string) error {
 			if err := md.Process(); err != nil {
 				return err
 			}
+			sc.metaDataVersion = md.Metadata.MetadataVersion
 		case ChainTypePolkadot:
-			md, _ := sc.metaDecoder.(*polkadot.MetadataDecoder)
+			md, _ := sc.metaDecoder.(*scale.MetadataDecoder)
 			md.Init(utiles.HexToBytes(metaRaw))
 			if err := md.Process(); err != nil {
 				return err
 			}
+			sc.metaDataVersion = md.Metadata.MetadataVersion
 		default:
 			return errors.New("chainType not supported")
 		}
@@ -237,17 +263,23 @@ func (sc *SarpcClient) GetExtrinsics(blockHash string) ([]*submodel.Transaction,
 		}
 		return exts, nil
 	case ChainTypePolkadot:
-		e := new(polkadot.ExtrinsicDecoder)
-		md, _ := sc.metaDecoder.(*polkadot.MetadataDecoder)
-		option := polkadot.ScaleDecoderOption{Metadata: &md.Metadata, Spec: sc.currentSpecVersion}
+		e := new(scale.ExtrinsicDecoder)
+		md, _ := sc.metaDecoder.(*scale.MetadataDecoder)
+		option := scaleTypes.ScaleDecoderOption{Metadata: &md.Metadata, Spec: sc.currentSpecVersion}
 		for _, raw := range blk.Extrinsics {
-			e.Init(polkadot.ScaleBytes{Data: util.HexToBytes(raw)}, &option)
+			e.Init(scaleTypes.ScaleBytes{Data: util.HexToBytes(raw)}, &option)
 			e.Process()
+
+			call, exist := e.Metadata.CallIndex[e.CallIndex]
+			if !exist {
+				return nil, fmt.Errorf("callIndex: %s not exist metaData", e.CallIndex)
+			}
+
 			if e.ExtrinsicHash != "" && e.ContainsTransaction {
 				ext := &submodel.Transaction{
 					ExtrinsicHash:  e.ExtrinsicHash,
-					CallModuleName: e.CallModule.Name,
-					CallName:       e.Call.Name,
+					CallModuleName: call.Module.Name,
+					CallName:       call.Call.Name,
 					Address:        e.Address,
 					Params:         e.Params,
 				}
@@ -306,10 +338,10 @@ func (sc *SarpcClient) GetChainEvents(blockHash string) ([]*submodel.ChainEvent,
 			return nil, err
 		}
 	case ChainTypePolkadot:
-		e := polkadot.EventsDecoder{}
-		md, _ := sc.metaDecoder.(*polkadot.MetadataDecoder)
-		option := polkadot.ScaleDecoderOption{Metadata: &md.Metadata}
-		e.Init(polkadot.ScaleBytes{Data: util.HexToBytes(eventRaw)}, &option)
+		e := scale.EventsDecoder{}
+		md, _ := sc.metaDecoder.(*scale.MetadataDecoder)
+		option := scaleTypes.ScaleDecoderOption{Metadata: &md.Metadata}
+		e.Init(scaleTypes.ScaleBytes{Data: util.HexToBytes(eventRaw)}, &option)
 		e.Process()
 		b, err := json.Marshal(e.Value)
 		if err != nil {

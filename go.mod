@@ -1,6 +1,6 @@
 module rtoken-swap
 
-go 1.15
+go 1.16
 
 require (
 	github.com/ChainSafe/log15 v1.0.0
@@ -9,7 +9,7 @@ require (
 	github.com/ethereum/go-ethereum v1.9.25
 	github.com/gorilla/websocket v1.4.2
 	github.com/huandu/xstrings v1.3.2
-	github.com/itering/scale.go v1.0.61
+	github.com/itering/scale.go v1.1.21
 	github.com/itering/substrate-api-rpc v0.3.5
 	github.com/mr-tron/base58 v1.2.0
 	github.com/shopspring/decimal v1.2.0
@@ -17,7 +17,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.1
 	github.com/stafiprotocol/chainbridge v0.0.0-20210122054647-25195c4be148
-	github.com/stafiprotocol/go-substrate-rpc-client v1.1.0
+	github.com/stafiprotocol/go-substrate-rpc-client v1.1.3
 	github.com/stafiprotocol/solana-go-sdk v0.2.6
 	github.com/stretchr/testify v1.7.0
 	github.com/tendermint/tendermint v0.34.9

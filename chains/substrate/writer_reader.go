@@ -132,7 +132,7 @@ func (w *writer) processNewTransferSingle(m *core.Message) bool {
 	least := utils.AddU128(transInfoSingle.Info.Value, e)
 	if balance.Cmp(least.Int) < 0 {
 		w.sysErr <- fmt.Errorf("free balance not enough for transfer back, symbol: %s, pool: %s, least: %s",
-			w.symbol, hexutil.Encode(w.conn.gc.PublicKey()), least.Int.String())
+			w.symbol, hexutil.Encode(w.conn.sc.PublicKey()), least.Int.String())
 		return false
 	}
 

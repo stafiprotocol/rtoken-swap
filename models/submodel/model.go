@@ -2,9 +2,8 @@ package submodel
 
 import (
 	"rtoken-swap/core"
-	chainTypes "rtoken-swap/types"
 
-	scalecodec "github.com/itering/scale.go"
+	scale "github.com/itering/scale.go"
 	"github.com/itering/substrate-api-rpc/rpc"
 	"github.com/stafiprotocol/go-substrate-rpc-client/signature"
 	"github.com/stafiprotocol/go-substrate-rpc-client/types"
@@ -67,9 +66,9 @@ type Era struct {
 }
 
 type ChainEvent struct {
-	ModuleId string                  `json:"module_id" `
-	EventId  string                  `json:"event_id" `
-	Params   []scalecodec.EventParam `json:"params"`
+	ModuleId string             `json:"module_id" `
+	EventId  string             `json:"event_id" `
+	Params   []scale.EventParam `json:"params"`
 }
 
 type MultiOpaqueCall struct {
@@ -84,7 +83,7 @@ type Transaction struct {
 	CallModuleName string
 	CallName       string
 	Address        interface{}
-	Params         []chainTypes.ExtrinsicParam
+	Params         []scale.ExtrinsicParam
 }
 
 type TransInfoSingle struct {

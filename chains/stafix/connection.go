@@ -27,7 +27,6 @@ type Connection struct {
 	url    string
 	symbol core.RSymbol
 	sc     *substrate.SarpcClient
-	gc     *substrate.GsrpcClient
 	log    log15.Logger
 	stop   <-chan int
 }
@@ -53,19 +52,14 @@ func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*C
 		return nil, errors.New("addressType not ok")
 	}
 
-	sc, err := substrate.NewSarpcClient(cfg.Name, cfg.Endpoint, path, log)
-	if err != nil {
-		return nil, err
-	}
-
 	kp, err := keystore.KeypairFromAddress(payerAccount, keystore.SubChain, cfg.KeystorePath, cfg.Insecure)
 	if err != nil {
 		return nil, fmt.Errorf("keypairFromAddress err: %s", err)
 	}
 	krp := kp.(*sr25519.Keypair).AsKeyringPair()
-	gc, err := substrate.NewGsrpcClient(cfg.Endpoint, "AccountId", krp, log, stop)
+	sc, err := substrate.NewSarpcClient(substrate.ChainTypeStafi, cfg.Endpoint, path, substrate.AddressTypeAccountId, krp, log, stop)
 	if err != nil {
-		return nil, fmt.Errorf("substrate.NewGsrpcClient err %s", err)
+		return nil, err
 	}
 
 	return &Connection{
@@ -74,24 +68,23 @@ func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*C
 		log:    log,
 		stop:   stop,
 		sc:     sc,
-		gc:     gc,
 	}, nil
 }
 
 func (c *Connection) GetBlockNumber(hash types.Hash) (uint64, error) {
-	return c.gc.GetBlockNumber(hash)
+	return c.sc.GetBlockNumber(hash)
 }
 
 func (c *Connection) LatestBlockNumber() (uint64, error) {
-	return c.gc.GetLatestBlockNumber()
+	return c.sc.GetLatestBlockNumber()
 }
 
 func (c *Connection) FinalizedBlockNumber() (uint64, error) {
-	return c.gc.GetFinalizedBlockNumber()
+	return c.sc.GetFinalizedBlockNumber()
 }
 
 func (c *Connection) Address() string {
-	return c.gc.Address()
+	return c.sc.Address()
 }
 
 func (c *Connection) GetEvents(blockNum uint64) ([]*submodel.ChainEvent, error) {
@@ -100,23 +93,19 @@ func (c *Connection) GetEvents(blockNum uint64) ([]*submodel.ChainEvent, error) 
 
 // queryStorage performs a storage lookup. Arguments may be nil, result must be a pointer.
 func (c *Connection) QueryStorage(prefix, method string, arg1, arg2 []byte, result interface{}) (bool, error) {
-	return c.gc.QueryStorage(prefix, method, arg1, arg2, result)
+	return c.sc.QueryStorage(prefix, method, arg1, arg2, result)
 }
 
 func (c *Connection) GetExtrinsics(blockhash string) ([]*submodel.Transaction, error) {
 	return c.sc.GetExtrinsics(blockhash)
 }
 
-func (c *Connection) LatestMetadata() (*types.Metadata, error) {
-	return c.gc.GetLatestMetadata()
-}
-
 func (c *Connection) FreeBalance(who []byte) (types.U128, error) {
-	return c.gc.FreeBalance(who)
+	return c.sc.FreeBalance(who)
 }
 
 func (c *Connection) ExistentialDeposit() (types.U128, error) {
-	return c.gc.ExistentialDeposit()
+	return c.sc.ExistentialDeposit()
 }
 
 func (c *Connection) GetLatestDealBlock(sym core.RSymbol) (uint64, error) {
@@ -223,7 +212,7 @@ func (c *Connection) GetSignature(symbol core.RSymbol, block uint64, proposalId 
 }
 
 func (c *Connection) TransferCall(recipient []byte, value types.UCompact) (*submodel.MultiOpaqueCall, error) {
-	return c.gc.TransferCall(recipient, value)
+	return c.sc.TransferCall(recipient, value)
 }
 
 func (c *Connection) PaymentQueryInfo(ext string) (info *rpc.PaymentQueryInfo, err error) {
@@ -255,7 +244,7 @@ func (c *Connection) AsMulti(flow *submodel.MultiEventFlow) error {
 }
 
 func (c *Connection) asMulti(flow *submodel.MultiEventFlow) error {
-	gc := c.gc
+	gc := c.sc
 	if gc == nil {
 		panic(fmt.Sprintf("key disappear: %s, symbol: %s", hexutil.Encode(flow.Key.PublicKey), c.symbol))
 	}
@@ -273,7 +262,7 @@ func (c *Connection) asMulti(flow *submodel.MultiEventFlow) error {
 
 	calls := make([]types.Call, 0)
 	for _, oc := range flow.OpaqueCalls {
-		ext, err := c.gc.NewUnsignedExtrinsic(config.MethodAsMulti, flow.Threshold, flow.Others, oc.TimePoint, oc.Opaque, false, flow.PaymentInfo.Weight)
+		ext, err := c.sc.NewUnsignedExtrinsic(config.MethodAsMulti, flow.Threshold, flow.Others, oc.TimePoint, oc.Opaque, false, flow.PaymentInfo.Weight)
 		if err != nil {
 			return err
 		}
@@ -296,14 +285,14 @@ func (c *Connection) asMulti(flow *submodel.MultiEventFlow) error {
 func (c *Connection) submitSignature(param *submodel.SubmitSignatureParams) bool {
 	for i := 0; i < BlockRetryLimit; i++ {
 		c.log.Info("submitSignature on chain...")
-		ext, err := c.gc.NewUnsignedExtrinsic(config.SubmitSignatures, param.Symbol,
+		ext, err := c.sc.NewUnsignedExtrinsic(config.SubmitSignatures, param.Symbol,
 			param.Block, param.ProposalId, param.Signature)
 		if err != nil {
 			c.log.Warn("submitSignature error will retry", "err", err)
 			time.Sleep(BlockRetryInterval)
 			continue
 		}
-		err = c.gc.SignAndSubmitTx(ext)
+		err = c.sc.SignAndSubmitTx(ext)
 		if err != nil {
 			if err.Error() == ErrorTerminated.Error() {
 				c.log.Error("submitSignature  met TerminatedError")
@@ -321,13 +310,13 @@ func (c *Connection) submitSignature(param *submodel.SubmitSignatureParams) bool
 func (c *Connection) reportTransResultWithBlock(symbol core.RSymbol, block uint64) bool {
 	for i := 0; i < BlockRetryLimit; i++ {
 		c.log.Info("reportTransResultWithBlock on chain...")
-		ext, err := c.gc.NewUnsignedExtrinsic(config.ReportTransResultWithBlock, symbol, block)
+		ext, err := c.sc.NewUnsignedExtrinsic(config.ReportTransResultWithBlock, symbol, block)
 		if err != nil {
 			c.log.Warn("reportTransResultWithBlock error will retry", "err", err)
 			time.Sleep(BlockRetryInterval)
 			continue
 		}
-		err = c.gc.SignAndSubmitTx(ext)
+		err = c.sc.SignAndSubmitTx(ext)
 		if err != nil {
 			if err.Error() == ErrorTerminated.Error() {
 				c.log.Error("reportTransResultWithBlock  met TerminatedError")
@@ -345,13 +334,13 @@ func (c *Connection) reportTransResultWithBlock(symbol core.RSymbol, block uint6
 func (c *Connection) reportTransResultWithIndex(symbol core.RSymbol, block uint64, index uint32) bool {
 	for i := 0; i < BlockRetryLimit; i++ {
 		c.log.Info("reportTransResultWithIndex on chain...")
-		ext, err := c.gc.NewUnsignedExtrinsic(config.ReportTransResultWithIndex, symbol, block, index)
+		ext, err := c.sc.NewUnsignedExtrinsic(config.ReportTransResultWithIndex, symbol, block, index)
 		if err != nil {
 			c.log.Warn("reportTransResultWithIndex error will retry", "err", err)
 			time.Sleep(BlockRetryInterval)
 			continue
 		}
-		err = c.gc.SignAndSubmitTx(ext)
+		err = c.sc.SignAndSubmitTx(ext)
 		if err != nil {
 			if err.Error() == ErrorTerminated.Error() {
 				c.log.Error("reportTransResultWithIndex  met TerminatedError")
