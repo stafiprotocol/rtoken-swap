@@ -57,7 +57,7 @@ func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*C
 		return nil, fmt.Errorf("keypairFromAddress err: %s", err)
 	}
 	krp := kp.(*sr25519.Keypair).AsKeyringPair()
-	sc, err := substrate.NewSarpcClient(substrate.ChainTypeStafi, cfg.Endpoint, path, substrate.AddressTypeAccountId, krp, log, stop)
+	sc, err := substrate.NewSarpcClient(substrate.ChainTypeStafi, cfg.Endpoint, path, substrate.AddressTypeAccountId, krp, log)
 	if err != nil {
 		return nil, err
 	}

@@ -225,8 +225,6 @@ func (sc *SarpcClient) SignAndSubmitTx(ext interface{}) error {
 func (sc *SarpcClient) watchSubmission(sub *author.ExtrinsicStatusSubscription) error {
 	for {
 		select {
-		case <-sc.stop:
-			return TerminatedError
 		case status := <-sub.Chan():
 			switch {
 			case status.IsInBlock:
@@ -307,7 +305,7 @@ func (sc *SarpcClient) BondOrUnbondCall(bond, unbond *big.Int) (*submodel.MultiO
 		val = types.NewUCompact(diff)
 	} else {
 		sc.log.Info("bond is equal to unbond, NoCall")
-		return nil, BondEqualToUnbondError
+		return nil, ErrBondEqualToUnbond
 	}
 
 	ext, err := sc.NewUnsignedExtrinsic(method, val)
@@ -620,6 +618,15 @@ func (sc *SarpcClient) FindCallIndex(call string) (types.CallIndex, error) {
 
 		return meta.FindCallIndex(call)
 	case ChainTypePolkadot:
+		head, err := sc.GetFinalizedHead()
+		if err != nil {
+			return types.CallIndex{}, nil
+		}
+		err = sc.UpdateMeta(head.Hex())
+		if err != nil {
+			return types.CallIndex{}, err
+		}
+
 		md, _ := sc.metaDecoder.(*scale.MetadataDecoder)
 		s := strings.Split(call, ".")
 

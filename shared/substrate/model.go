@@ -13,7 +13,5 @@ const (
 )
 
 var (
-	TerminatedError           = errors.New("terminated")
-	BondEqualToUnbondError    = errors.New("BondEqualToUnbondError")
-	DiffSmallerThanLeastError = errors.New("DiffSmallerThanLeastError")
+	ErrBondEqualToUnbond = errors.New("BondEqualToUnbondError")
 )

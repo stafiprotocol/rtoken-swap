@@ -31,13 +31,11 @@ const (
 )
 
 type SarpcClient struct {
-	endpoint    string
-	addressType string
-	api         *gsrpc.SubstrateAPI
-	key         *signature.KeyringPair
-	genesisHash types.Hash
-	stop        <-chan int
-
+	endpoint           string
+	addressType        string
+	api                *gsrpc.SubstrateAPI
+	key                *signature.KeyringPair
+	genesisHash        types.Hash
 	wsPool             wbskt.Pool
 	log                log15.Logger
 	chainType          string
@@ -55,7 +53,7 @@ var (
 	}
 )
 
-func NewSarpcClient(chainType, endpoint, typesPath, addressType string, key *signature.KeyringPair, log log15.Logger, stop <-chan int) (*SarpcClient, error) {
+func NewSarpcClient(chainType, endpoint, typesPath, addressType string, key *signature.KeyringPair, log log15.Logger) (*SarpcClient, error) {
 	log.Info("Connecting to substrate chain with sarpc", "endpoint", endpoint)
 
 	if addressType != AddressTypeAccountId && addressType != AddressTypeMultiAddress {
@@ -91,7 +89,6 @@ func NewSarpcClient(chainType, endpoint, typesPath, addressType string, key *sig
 		api:                api,
 		key:                key,
 		genesisHash:        genesisHash,
-		stop:               stop,
 		wsPool:             nil,
 		log:                log,
 		metaRaw:            "",
@@ -186,7 +183,7 @@ func (sc *SarpcClient) UpdateMeta(blockHash string) error {
 		return fmt.Errorf("runtime version nil")
 	}
 
-	// metadata raw
+	// check metadata need update
 	if sc.metaRaw == "" || r.SpecVersion > sc.currentSpecVersion {
 		if err := sc.sendWsRequest(nil, v, rpc.StateGetMetadata(wsId, blockHash)); err != nil {
 			return err

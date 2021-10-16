@@ -107,7 +107,7 @@ func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*C
 	default:
 		return nil, fmt.Errorf("chain type err")
 	}
-	sc, err := substrate.NewSarpcClient(chainType, cfg.Endpoint, path, substrate.AddressTypeMultiAddress, krp, log, stop)
+	sc, err := substrate.NewSarpcClient(chainType, cfg.Endpoint, path, substrate.AddressTypeMultiAddress, krp, log)
 	if err != nil {
 		return nil, err
 	}
