@@ -5,12 +5,15 @@ package substrate
 
 import (
 	"fmt"
+	"math/big"
 	"time"
 
-	"github.com/ChainSafe/log15"
 	"rtoken-swap/chains"
 	"rtoken-swap/config"
 	"rtoken-swap/core"
+
+	"github.com/ChainSafe/log15"
+	"github.com/stafiprotocol/chainbridge/utils/blockstore"
 )
 
 type listener struct {
@@ -18,6 +21,7 @@ type listener struct {
 	symbol        core.RSymbol
 	startBlock    uint64
 	conn          *Connection
+	blockstore    blockstore.Blockstorer
 	subscriptions map[eventName]eventHandler // Handlers for specific events
 	router        chains.Router
 	log           log15.Logger
@@ -36,13 +40,15 @@ var (
 	EventRetryInterval        = 100 * time.Millisecond
 )
 
-func NewListener(name string, symbol core.RSymbol, startBlock uint64, conn *Connection, log log15.Logger, stop <-chan int, sysErr chan<- error) *listener {
+func NewListener(name string, symbol core.RSymbol, startBlock uint64, conn *Connection,
+	bs blockstore.Blockstorer, log log15.Logger, stop <-chan int, sysErr chan<- error) *listener {
 
 	return &listener{
 		name:          name,
 		symbol:        symbol,
 		startBlock:    startBlock,
 		conn:          conn,
+		blockstore:    bs,
 		subscriptions: make(map[eventName]eventHandler),
 		log:           log,
 		stop:          stop,
@@ -131,6 +137,12 @@ func (l *listener) pollBlocks() error {
 				l.log.Error("Failed to process events in block", "block", currentBlock, "err", err)
 				retry--
 				continue
+			}
+
+			// Write to blockstore currentBlock,but it maybe not dealed by stafi
+			err = l.blockstore.StoreBlock(new(big.Int).SetUint64(currentBlock))
+			if err != nil {
+				l.log.Error("Failed to write to blockstore", "err", err)
 			}
 
 			currentBlock++

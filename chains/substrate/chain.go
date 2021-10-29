@@ -7,6 +7,7 @@ import (
 	"errors"
 	"strconv"
 
+	"rtoken-swap/chains"
 	"rtoken-swap/config"
 	"rtoken-swap/core"
 
@@ -32,17 +33,27 @@ func InitializeChain(cfg *core.ChainConfig, logger log15.Logger, sysErr chan<- e
 		return nil, err
 	}
 
-	useStartBlock := uint64(0)
 	latestBlock, err := conn.LatestBlockNumber()
 	if err != nil {
 		return nil, err
 	}
-	startBlock := parseStartBlock(cfg)
-	if cfg.LatestBlockFlag {
-		useStartBlock = latestBlock
-	} else {
-		useStartBlock = startBlock
+
+	bs, err := chains.NewBlockstore(cfg.Opts["blockstorePath"], conn.BlockStoreUseAddress())
+	if err != nil {
+		return nil, err
 	}
+
+	// max in(startblock, bloclstoreblock)
+	startBlkFromConfigOrBlockstore, err := chains.StartBlock(bs, cfg.Opts[config.StartBlockKey])
+	if err != nil {
+		return nil, err
+	}
+
+	useStartBlock := latestBlock
+	if !cfg.LatestBlockFlag {
+		useStartBlock = startBlkFromConfigOrBlockstore
+	}
+
 	thresholdStr, ok := cfg.Opts[config.ThresholdKey].(string)
 	if !ok {
 		return nil, errors.New("config must has threshold")
@@ -53,7 +64,7 @@ func InitializeChain(cfg *core.ChainConfig, logger log15.Logger, sysErr chan<- e
 	}
 
 	// Setup listener & writer
-	l := NewListener(cfg.Name, cfg.Symbol, useStartBlock, conn, logger, stop, sysErr)
+	l := NewListener(cfg.Name, cfg.Symbol, useStartBlock, conn, bs, logger, stop, sysErr)
 	w := NewReaderWriter(cfg.Symbol, cfg.Opts, conn, threshold, logger, sysErr, stop)
 	return &Chain{cfg: cfg, conn: conn, listener: l, writer: w, stop: stop}, nil
 }
