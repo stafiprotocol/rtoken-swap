@@ -63,7 +63,7 @@ func initAction(ctx *cli.Context) error {
 		owners = append(owners, a.PublicKey)
 	}
 
-	c := solClient.NewClient(pc.Endpoint)
+	c := solClient.NewClient([]string{pc.Endpoint})
 	res, err := c.GetRecentBlockhash(context.Background())
 	if err != nil {
 		return err

@@ -21,20 +21,20 @@ var app = cli.NewApp()
 var cliFlags = []cli.Flag{
 	config.ConfigFileFlag,
 	config.VerbosityFlag,
-	config.KeystorePathFlag,
 }
 
 var generateFlags = []cli.Flag{
-	config.PathFlag,
+	config.KeystorePathFlag,
+	config.NetworkFlag,
 }
 
 var accountCommand = cli.Command{
-	Name:  "accounts",
-	Usage: "manage keystores",
+	Name:        "accounts",
+	Usage:       "manage keystores",
 	Description: "The accounts command is used to manage the keystore.\n",
 	Subcommands: []*cli.Command{
 		{
-			Action: wrapHandler(handleGenerateSubCmd),
+			Action: handleGenerateSubCmd,
 			Name:   "gensub",
 			Usage:  "generate subsrate keystore",
 			Flags:  generateFlags,

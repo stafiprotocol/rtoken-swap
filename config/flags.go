@@ -26,41 +26,9 @@ var (
 		Value: DefaultKeystorePath,
 	}
 
-	BlockstorePathFlag = &cli.StringFlag{
-		Name:  "blockstore",
-		Usage: "Specify path for blockstore",
-		Value: "", // Empty will use home dir
-	}
-
-	FreshStartFlag = &cli.BoolFlag{
-		Name:  "fresh",
-		Usage: "Disables loading from blockstore at start. Opts will still be used if specified.",
-	}
-
-	LatestBlockFlag = &cli.BoolFlag{
-		Name:  "latest",
-		Usage: "Overrides blockstore and start block, starts from latest block",
-	}
-)
-
-// Metrics flags
-var (
-	MetricsFlag = &cli.BoolFlag{
-		Name:  "metrics",
-		Usage: "Enables metric server",
-	}
-
-	MetricsPort = &cli.IntFlag{
-		Name:  "metricsPort",
-		Usage: "Port to serve metrics on",
-		Value: 8001,
-	}
-)
-
-// Generate subcommand flags
-var (
-	PathFlag = &cli.StringFlag{
-		Name:  "keypath",
-		Usage: "Dir to keep key file.",
+	NetworkFlag = &cli.StringFlag{
+		Name:  "network",
+		Usage: "specify network for subkey like [stafi polkadot kusama ...]",
+		Value: "stafi",
 	}
 )

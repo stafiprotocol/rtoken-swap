@@ -22,34 +22,32 @@ import (
 const msgLimit = 1024
 
 type writer struct {
-	symbol          core.RSymbol
-	conn            *Connection
-	router          chains.Router
-	eventMtx        sync.RWMutex
-	newMulTicsMtx   sync.RWMutex
-	threshold       int
-	events          map[string]*submodel.MultiEventFlow
-	newMultics      map[string]*submodel.EventNewMultisig
-	msgChan         chan *core.Message
-	log             log15.Logger
-	sysErr          chan<- error
-	currentChainEra uint32
-	stop            <-chan int
+	symbol        core.RSymbol
+	conn          *Connection
+	router        chains.Router
+	eventMtx      sync.RWMutex
+	newMulTicsMtx sync.RWMutex
+	threshold     int
+	events        map[string]*submodel.MultiEventFlow
+	newMultics    map[string]*submodel.EventNewMultisig
+	msgChan       chan *core.Message
+	log           log15.Logger
+	sysErr        chan<- error
+	stop          <-chan int
 }
 
 func NewReaderWriter(symbol core.RSymbol, opts map[string]interface{}, conn *Connection, threthold int, log log15.Logger, sysErr chan<- error, stop <-chan int) *writer {
 
 	return &writer{
-		symbol:          symbol,
-		conn:            conn,
-		log:             log,
-		sysErr:          sysErr,
-		events:          make(map[string]*submodel.MultiEventFlow),
-		newMultics:      make(map[string]*submodel.EventNewMultisig),
-		threshold:       threthold,
-		msgChan:         make(chan *core.Message, msgLimit),
-		currentChainEra: 0,
-		stop:            stop,
+		symbol:     symbol,
+		conn:       conn,
+		log:        log,
+		sysErr:     sysErr,
+		events:     make(map[string]*submodel.MultiEventFlow),
+		newMultics: make(map[string]*submodel.EventNewMultisig),
+		threshold:  threthold,
+		msgChan:    make(chan *core.Message, msgLimit),
+		stop:       stop,
 	}
 }
 
@@ -131,7 +129,7 @@ func (w *writer) processNewTransferSingle(m *core.Message) bool {
 	}
 	least := utils.AddU128(transInfoSingle.Info.Value, e)
 	if balance.Cmp(least.Int) < 0 {
-		w.sysErr <- fmt.Errorf("free balance not enough for transfer back, symbol: %s, pool: %s, least: %s",
+		w.sysErr <- fmt.Errorf("free balance not enough for transfer, symbol: %s, pool: %s, least: %s",
 			w.symbol, hexutil.Encode(w.conn.sc.PublicKey()), least.Int.String())
 		return false
 	}
@@ -163,6 +161,7 @@ func (w *writer) processNewTransferSingle(m *core.Message) bool {
 
 	index := transInfoSingle.Block % (uint64(len(w.conn.OthersAccount)) + 1)
 
+	//sort all subAccount
 	allSubAccount := make([]types.AccountID, 0)
 	allSubAccount = append(allSubAccount, types.NewAccountID(w.conn.SubKey.PublicKey))
 	allSubAccount = append(allSubAccount, w.conn.OthersAccount...)
@@ -182,7 +181,6 @@ func (w *writer) processNewTransferSingle(m *core.Message) bool {
 			return false
 		}
 		w.log.Info("AsMulti success", "callHash", callhash)
-
 		return true
 	}
 
