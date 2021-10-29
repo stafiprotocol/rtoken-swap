@@ -5,6 +5,7 @@ package stafix
 
 import (
 	"fmt"
+	"math/big"
 	"time"
 
 	"rtoken-swap/chains"
@@ -12,6 +13,7 @@ import (
 	"rtoken-swap/models/submodel"
 
 	"github.com/ChainSafe/log15"
+	"github.com/stafiprotocol/chainbridge/utils/blockstore"
 )
 
 type listener struct {
@@ -20,6 +22,7 @@ type listener struct {
 	care         core.RSymbol
 	startBlock   uint64
 	conn         *Connection
+	blockstore   blockstore.Blockstorer
 	router       chains.Router
 	log          log15.Logger
 	stop         <-chan int
@@ -33,13 +36,15 @@ var (
 	BlockRetryLimit    = 100
 )
 
-func NewListener(name string, symbol, care core.RSymbol, opts map[string]interface{}, startBlock uint64, conn *Connection, log log15.Logger, stop <-chan int, sysErr chan<- error) *listener {
+func NewListener(name string, symbol, care core.RSymbol, opts map[string]interface{}, startBlock uint64,
+	conn *Connection, bs blockstore.Blockstorer, log log15.Logger, stop <-chan int, sysErr chan<- error) *listener {
 	return &listener{
 		name:         name,
 		symbol:       symbol,
 		care:         care,
 		startBlock:   startBlock,
 		conn:         conn,
+		blockstore:   bs,
 		log:          log,
 		stop:         stop,
 		sysErr:       sysErr,
@@ -122,11 +127,17 @@ func (l *listener) pollBlocks() error {
 				l.log.Info("get new transInfos", "trans block", transInfos.Block, "dest", transInfos.DestSymbol)
 				err := l.processTransInfos(transInfos)
 				if err != nil {
-					panic(err)
+					l.sysErr <- fmt.Errorf("processTransInfos failed: %s", err)
+					return err
 				}
 			}
 			if nextDealBlock%100 == 0 {
 				l.log.Info("next deal block", "blocknumber", nextDealBlock)
+			}
+			// Write to blockstore which is already dealed
+			err = l.blockstore.StoreBlock(new(big.Int).SetUint64(nextDealBlock))
+			if err != nil {
+				l.log.Error("Failed to write to blockstore", "err", err)
 			}
 
 			nextDealBlock++
@@ -139,19 +150,50 @@ func (l *listener) processTransInfos(infos *submodel.TransInfoList) error {
 
 	switch infos.DestSymbol {
 	case core.RATOM:
-		//check transinfo is not deal
+		//check transinfo all not dealed or all dealed
+		allDeal := true
 		for _, transInfo := range infos.List {
-			if transInfo.IsDeal {
-				return fmt.Errorf("transInfo must all is not deal, symbol: %s block: %d", l.care, infos.Block)
+			if !transInfo.IsDeal {
+				allDeal = false
+				break
 			}
 		}
+
+		//skip is all deal
+		if allDeal {
+			l.log.Warn("transInfoList allready dealed will skip: %+v", infos)
+			return nil
+		}
+
 		msg := &core.Message{Destination: infos.DestSymbol, Reason: core.NewTransInfos, Content: infos}
-		return l.submitWriteMessage(msg)
+		err := l.submitWriteMessage(msg)
+		if err != nil {
+			return fmt.Errorf("submitWriteMessage %s", err)
+		}
+		// wait until it is deal ,then continue to deal next
+		retry := 0
+		for {
+			if retry > BlockRetryLimit {
+				return fmt.Errorf("l.conn.TransInfoIsDeal reach retry limit, dest symbol:%s,block:%d,index:%d",
+					infos.DestSymbol, infos.Block, 0)
+			}
+			isDeal, err := l.conn.TransInfoIsDeal(infos.DestSymbol, infos.Block, 0)
+			if err == nil && isDeal {
+				l.log.Info("TransInfoSingle has deal", "symbol", infos.DestSymbol, "block", infos.Block, "index", 0)
+				break
+			}
+			l.log.Warn("TransInfoSingle still not deal, will wait...", "symbol", infos.DestSymbol, "block", infos.Block, "index", 0)
+			retry++
+			time.Sleep(BlockRetryInterval)
+		}
+		return nil
 	case core.RDOT, core.RKSM, core.RFIS:
-		needDeal := false
 		for i, transInfo := range infos.List {
-			if !transInfo.IsDeal {
-				needDeal = true
+			//only transfer not dealed
+			if transInfo.IsDeal {
+				l.log.Warn("transInfo allready dealed will skip: %+v", transInfo)
+				continue
+			} else {
 				infoSingle := submodel.TransInfoSingle{
 					Block:      infos.Block,
 					Index:      uint32(i),
@@ -163,7 +205,7 @@ func (l *listener) processTransInfos(infos *submodel.TransInfoList) error {
 				if err != nil {
 					return fmt.Errorf("submitWriteMessage %s", err)
 				}
-				// wait until pre is deal ,then continue to deal next
+				// wait until it is deal ,then continue to deal next
 				retry := 0
 				for {
 					if retry > BlockRetryLimit {
@@ -181,10 +223,7 @@ func (l *listener) processTransInfos(infos *submodel.TransInfoList) error {
 				}
 			}
 		}
-		//if no need to deal, it should't happend here
-		if !needDeal {
-			return fmt.Errorf("transInfoList must has transInfo that is not deal, symbol:%s block:%d", l.care, infos.Block)
-		}
+
 		return nil
 	default:
 		return fmt.Errorf("unsupport care symbol: %s", l.care)

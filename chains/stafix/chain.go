@@ -7,6 +7,7 @@ import (
 	"errors"
 	"strconv"
 
+	"rtoken-swap/chains"
 	"rtoken-swap/config"
 	"rtoken-swap/core"
 
@@ -32,10 +33,19 @@ func InitializeChain(cfg *core.ChainConfig, logger log15.Logger, sysErr chan<- e
 		return nil, err
 	}
 
-	blk := parseStartBlock(cfg)
+	bs, err := chains.NewBlockstore(cfg.Opts["blockstorePath"], conn.BlockStoreUseAddress())
+	if err != nil {
+		return nil, err
+	}
+
+	// max in(startblock, bloclstoreblock)
+	startBlk, err := chains.StartBlock(bs, cfg.Opts[config.StartBlockKey])
+	if err != nil {
+		return nil, err
+	}
 
 	// Setup listener & writer
-	l := NewListener(cfg.Name, cfg.Symbol, cfg.Care, cfg.Opts, blk, conn, logger, stop, sysErr)
+	l := NewListener(cfg.Name, cfg.Symbol, cfg.Care, cfg.Opts, startBlk, conn, bs, logger, stop, sysErr)
 	w := NewReaderWriter(cfg.Symbol, cfg.Opts, conn, logger, sysErr, stop)
 	return &Chain{cfg: cfg, conn: conn, listener: l, writer: w, stop: stop}, nil
 }

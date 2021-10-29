@@ -7,6 +7,7 @@
       "keystorePath": "/Users/tpkeeper/gowork/stafi/rtoken-swap/keys",
       "care": "RATOM",
       "opts": {
+        "blockstorePath": "/Users/tpkeeper/gowork/stafi/rtoken-swap/blockstore",
         "payerAccount": "35arN8keEJhSeSnpyH9Cu6CBsmGchGgJi577CxHyPUuobUhg",
         "typesPath": "/Users/tpkeeper/gowork/stafi/rtoken-swap/network/stafi.json",
         "startBlock": "3700"

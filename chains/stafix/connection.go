@@ -24,11 +24,12 @@ import (
 var ErrNotExist = fmt.Errorf("not exist in storage")
 
 type Connection struct {
-	url    string
-	symbol core.RSymbol
-	sc     *substrate.SarpcClient
-	log    log15.Logger
-	stop   <-chan int
+	url                  string
+	symbol               core.RSymbol
+	sc                   *substrate.SarpcClient
+	log                  log15.Logger
+	stop                 <-chan int
+	blockstoreUseAddress string
 }
 
 var (
@@ -52,7 +53,7 @@ func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*C
 		return nil, errors.New("addressType not ok")
 	}
 
-	kp, err := keystore.KeypairFromAddress(payerAccount, keystore.SubChain, cfg.KeystorePath, cfg.Insecure)
+	kp, blockstoreUseAddress, err := keystore.KeypairFromAddressV2(payerAccount, keystore.SubChain, cfg.KeystorePath, cfg.Insecure)
 	if err != nil {
 		return nil, fmt.Errorf("keypairFromAddress err: %s", err)
 	}
@@ -63,12 +64,17 @@ func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*C
 	}
 
 	return &Connection{
-		url:    cfg.Endpoint,
-		symbol: cfg.Symbol,
-		log:    log,
-		stop:   stop,
-		sc:     sc,
+		url:                  cfg.Endpoint,
+		symbol:               cfg.Symbol,
+		log:                  log,
+		stop:                 stop,
+		sc:                   sc,
+		blockstoreUseAddress: blockstoreUseAddress,
 	}, nil
+}
+
+func (c *Connection) BlockStoreUseAddress() string {
+	return c.blockstoreUseAddress
 }
 
 func (c *Connection) GetBlockNumber(hash types.Hash) (uint64, error) {
