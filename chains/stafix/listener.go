@@ -241,8 +241,8 @@ func (l *listener) submitWriteMessage(m *core.Message) error {
 
 func (l *listener) blockDelay() uint64 {
 	switch l.symbol {
-	case core.RFIS:
-		return 5
+	case core.FIS:
+		return 1
 	default:
 		return 0
 	}

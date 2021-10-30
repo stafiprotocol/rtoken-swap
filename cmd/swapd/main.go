@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 
+	"rtoken-swap/chains/bsc"
 	"rtoken-swap/chains/cosmos"
 	"rtoken-swap/chains/substrate"
 
@@ -27,6 +28,9 @@ var generateFlags = []cli.Flag{
 	config.KeystorePathFlag,
 	config.NetworkFlag,
 }
+var generateEthFlags = []cli.Flag{
+	config.KeystorePathFlag,
+}
 
 var accountCommand = cli.Command{
 	Name:        "accounts",
@@ -39,6 +43,13 @@ var accountCommand = cli.Command{
 			Usage:  "generate subsrate keystore",
 			Flags:  generateFlags,
 			Description: "The generate subcommand is used to generate the substrate keystore.\n" +
+				"\tkeystore path should be given.",
+		}, {
+			Action: handleGenerateEthCmd,
+			Name:   "geneth",
+			Usage:  "generate eth keystore",
+			Flags:  generateEthFlags,
+			Description: "The generate subcommand is used to generate the eth keystore.\n" +
 				"\tkeystore path should be given.",
 		},
 	},
@@ -134,7 +145,11 @@ func run(ctx *cli.Context) error {
 			if err != nil {
 				return err
 			}
-
+		case "bnb":
+			newChain, err = bsc.InitializeChain(chainConfig, logger, sysErr)
+			if err != nil {
+				return err
+			}
 		default:
 			return errors.New("unrecognized Chain Type")
 		}

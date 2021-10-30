@@ -60,6 +60,10 @@ test:
 	@echo "  >  \033[32mRunning tests...\033[0m "
 	go test `go list ./... | grep -v bindings | grep -v e2e`
 
+abigen:
+	@echo "  >  \033[32mabigen...\033[0m "
+	rm ./shared/bnb/batch_transfer.go
+	abigen --abi ./shared/bnb/batchTransfer.json --pkg bnb --type BatchTransfer --out ./shared/bnb/batch_transfer.go
 
 clean:
 	rm -rf build/

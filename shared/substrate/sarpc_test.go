@@ -43,7 +43,7 @@ func TestGetEvents(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log("finalNumber:", finalNumber)
-
+	finalNumber = 9866420
 	for i := finalNumber; i > 0; i++ {
 		t.Log("now deal number", i)
 		var hash types.Hash

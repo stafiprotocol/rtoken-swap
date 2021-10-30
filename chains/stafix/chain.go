@@ -5,6 +5,7 @@ package stafix
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 
 	"rtoken-swap/chains"
@@ -26,7 +27,9 @@ type Chain struct {
 
 func InitializeChain(cfg *core.ChainConfig, logger log15.Logger, sysErr chan<- error) (*Chain, error) {
 	logger.Info("InitializeChain", "symbol", cfg.Symbol)
-
+	if cfg.Symbol != core.FIS {
+		return nil, fmt.Errorf("symbol must be FIS")
+	}
 	stop := make(chan int)
 	conn, err := NewConnection(cfg, logger, stop)
 	if err != nil {
