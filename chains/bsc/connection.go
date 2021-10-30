@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/ChainSafe/log15"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 const (
@@ -21,13 +20,11 @@ const (
 )
 
 type Connection struct {
-	url                  string
-	symbol               core.RSymbol
-	poolClient           *bsc.PoolClient
-	batchTransferAddress common.Address
-	subAccount           common.Address
-	log                  log15.Logger
-	stop                 <-chan int
+	url        string
+	symbol     core.RSymbol
+	poolClient *bsc.PoolClient
+	log        log15.Logger
+	stop       <-chan int
 }
 
 func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*Connection, error) {
@@ -45,8 +42,8 @@ func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*C
 		return nil, fmt.Errorf("no batchTransfer")
 	}
 
-	chainId, ok := cfg.Opts[config.ChainIdKey].(string)
-	if !ok || len(chainId) == 0 {
+	chainId, ok := cfg.Opts[config.ChainIdKey].(int64)
+	if !ok || chainId == 0 {
 		return nil, errors.New("config must has chainId")
 	}
 
@@ -66,7 +63,7 @@ func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*C
 		return nil, err
 	}
 	kp, _ := kpI.(*secp256k1.Keypair)
-	poolClient, err := bsc.NewPoolClient(bscEndpoint, batchTransferAddress, kp)
+	poolClient, err := bsc.NewPoolClient(bscEndpoint, batchTransferAddress, kp, maxGasPrice, gasLimit, chainId)
 	if err != nil {
 		return nil, err
 	}

@@ -1,15 +1,21 @@
 package bsc
 
 import (
+	"context"
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math/big"
 	"time"
 
-	"github.com/ChainSafe/log15"
 	"rtoken-swap/chains"
 	"rtoken-swap/core"
 	"rtoken-swap/models/submodel"
+
+	"github.com/ChainSafe/log15"
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/common"
+	"golang.org/x/crypto/sha3"
 )
 
 const msgLimit = 4096
@@ -100,9 +106,80 @@ func (w *writer) processNewTransInfos(m *core.Message) bool {
 		w.log.Info("block has deal ", "block", transInfoList.Block)
 		return true
 	}
-	w.conn.GetPoolClient()
-	return true
+	poolClient := w.conn.GetPoolClient()
+	batchTransfer := poolClient.GetBatchTransfer()
+	txOpts, err := poolClient.GetTransactionOpts()
+	if err != nil {
+		return false
+	}
+	callOpts := poolClient.GetCallOpts()
 
+	ethClient := poolClient.GetEthClient()
+	if err != nil {
+		w.log.Error("poolClient.GetTransactionOpts failed", "err", err)
+		return false
+	}
+	tos := make([]common.Address, 0)
+	values := make([]*big.Int, 0)
+	for _, l := range transInfoList.List {
+		tos = append(tos, common.BytesToAddress(l.Receiver))
+		values = append(values, l.Value.Int)
+	}
+	block := big.NewInt(int64(transInfoList.Block))
+	tx, err := batchTransfer.BatchTransfer(txOpts, block, tos, values)
+	//todo check already exe err
+	if err != nil {
+		w.log.Error("batchTransfer.BatchTransfer failed", "err", err)
+		return false
+	}
+	//check is confirmed
+	retry := 0
+	for {
+		if retry > BlockRetryLimit {
+			w.log.Error("check BatchTransfer tx reach retry", "tx", tx.Hash(), "fromAddress", poolClient.GetFromAddress().String())
+			return false
+		}
+		_, isPending, err := ethClient.TransactionByHash(context.Background(), tx.Hash())
+		if err == nil && !isPending {
+			break
+		} else {
+			w.log.Warn("check BatchTransfer tx failed ,watting...", " isPending ", isPending, " err ", err)
+			time.Sleep(BlockRetryInterval)
+			retry++
+			continue
+		}
+	}
+
+	phash := getProposalHash(block, tos, values)
+	retry = 0
+	for {
+		if retry > BlockRetryLimit {
+			w.log.Error("check proposal reach retry", "proposal", hex.EncodeToString(phash[:]), "fromAddress", poolClient.GetFromAddress().String())
+			return false
+		}
+
+		proposal, err := batchTransfer.Proposals(callOpts, phash)
+		if err != nil {
+			w.log.Warn("check proposal failed ,watting...", " err ", err)
+			time.Sleep(BlockRetryInterval)
+			retry++
+			continue
+		}
+		if proposal.Status != 2 {
+			w.log.Warn("check proposal not exe yet ,watting...", " tatus ", proposal.Status)
+			time.Sleep(BlockRetryInterval)
+			retry++
+			continue
+		}
+		break
+	}
+
+	w.log.Info("check proposal exe success", "block", transInfoList.Block, "transInfoList", transInfoListToStr(transInfoList))
+	report := submodel.TransResultWithBlock{
+		Symbol: core.RBNB,
+		Block:  transInfoList.Block,
+	}
+	return w.reportTransResultWithBlock(core.RBNB, core.FIS, &report)
 }
 
 func (w *writer) getLatestDealBLock(symbol core.RSymbol) (uint64, error) {
@@ -146,11 +223,37 @@ func (w *writer) checkDeal(block uint64) (bool, error) {
 	return latestDealBlock >= block, nil
 }
 
-func bytesArrayToStr(bts [][]byte) string {
+func transInfoListToStr(transInfoList *submodel.TransInfoList) string {
 	ret := ""
-	for _, b := range bts {
-		ret += " | "
-		ret += hex.EncodeToString(b)
+	for _, b := range transInfoList.List {
+		line := fmt.Sprintf("account: %s reciever: %s value: %s\n",
+			hex.EncodeToString(b.Account[:]), hex.EncodeToString(b.Receiver), b.Value.String())
+		ret += line
 	}
 	return ret
+}
+
+var uint256Ty, _ = abi.NewType("uint256", "", nil)
+var addressListTy, _ = abi.NewType("address[]", "", nil)
+var uint256ListTy, _ = abi.NewType("uint256[]", "", nil)
+
+var proposalArguments = abi.Arguments{
+	{
+		Type: uint256Ty,
+	},
+	{
+		Type: addressListTy,
+	},
+	{
+		Type: uint256ListTy,
+	},
+}
+
+func getProposalHash(block *big.Int, tos []common.Address, values []*big.Int) [32]byte {
+	bytes, _ := proposalArguments.Pack(block, tos, values)
+	var buf [32]byte
+	hash := sha3.NewLegacyKeccak256()
+	hash.Write(bytes)
+	hash.Sum(buf[:])
+	return buf
 }

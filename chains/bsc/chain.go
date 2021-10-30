@@ -23,6 +23,10 @@ func (c *Chain) InitBondedPools(symbols []core.RSymbol) error {
 }
 
 func InitializeChain(cfg *core.ChainConfig, logger log15.Logger, sysErr chan<- error) (*Chain, error) {
+	logger.Info("InitializeChain", "symbol", cfg.Symbol)
+	if cfg.Symbol != core.RBNB {
+		return nil, fmt.Errorf("symbol must be RBNB")
+	}
 	stop := make(chan int)
 	conn, err := NewConnection(cfg, logger, stop)
 	if err != nil {
