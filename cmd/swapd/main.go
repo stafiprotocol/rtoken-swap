@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"strconv"
 
@@ -62,7 +63,7 @@ func init() {
 	app.Name = "rtoken-swap"
 	app.Usage = "rtoken-swap"
 	app.Authors = []*cli.Author{{Name: "Stafi Protocol 2021"}}
-	app.Version = "0.0.1"
+	app.Version = "1.0.0"
 	app.EnableBashCompletion = true
 	app.Commands = []*cli.Command{
 		&accountCommand,
@@ -109,6 +110,9 @@ func run(ctx *cli.Context) error {
 	cfg, err := config.GetConfig(ctx)
 	if err != nil {
 		return err
+	}
+	if len(cfg.Chains) < 2 {
+		return fmt.Errorf("config err, no chains info")
 	}
 
 	// Used to signal core shutdown due to fatal error

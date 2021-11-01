@@ -76,7 +76,6 @@ func loadConfig(file string, config *Config) (err error) {
 	}
 
 	log.Debug("Loading configuration", "path", filepath.Clean(fp))
-
 	f, err := os.Open(filepath.Clean(fp))
 	if err != nil {
 		return err

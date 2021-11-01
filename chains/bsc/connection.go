@@ -3,7 +3,6 @@ package bsc
 import (
 	"errors"
 	"fmt"
-	"reflect"
 	"rtoken-swap/config"
 	"rtoken-swap/core"
 	"rtoken-swap/shared/bsc"
@@ -40,8 +39,6 @@ func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*C
 	if !ok || len(batchTransferAddress) == 0 {
 		return nil, fmt.Errorf("no batchTransfer")
 	}
-	fmt.Println(cfg.Opts[config.ChainIdKey])
-	fmt.Println(reflect.TypeOf(cfg.Opts[config.ChainIdKey]))
 	chainId, ok := cfg.Opts[config.ChainIdKey].(float64)
 	if !ok || chainId == 0 {
 		return nil, errors.New("config must has chainId")
