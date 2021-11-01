@@ -18,7 +18,6 @@ const DefaultKeystorePath = "./keys"
 const (
 	MultisigAccountKey      = "multisigAccount"
 	SubAccountKey           = "subAccount"
-	BscEndpointKey          = "bscEndpoint"
 	BatchTransferAddressKey = "batchTransferAddress"
 	GasLimitKey             = "gasLimit"
 	MaxGasPriceKey          = "maxGasPrice"

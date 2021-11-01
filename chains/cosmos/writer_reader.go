@@ -222,7 +222,7 @@ func (w *writer) getLatestDealBLock(symbol core.RSymbol) (uint64, error) {
 		Symbol: symbol,
 		Block:  make(chan uint64, 1),
 	}
-	m := &core.Message{Source: core.RATOM, Destination: core.RFIS, Reason: core.GetLatestDealBLock, Content: &getLatestDealBlockParam}
+	m := &core.Message{Source: core.RATOM, Destination: core.FIS, Reason: core.GetLatestDealBLock, Content: &getLatestDealBlockParam}
 	subOk := w.submitReadMessage(m)
 	if !subOk {
 		return 0, fmt.Errorf("submitMessage err")

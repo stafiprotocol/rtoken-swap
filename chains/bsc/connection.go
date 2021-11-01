@@ -3,12 +3,14 @@ package bsc
 import (
 	"errors"
 	"fmt"
-	"github.com/stafiprotocol/chainbridge/utils/crypto/secp256k1"
-	"github.com/stafiprotocol/chainbridge/utils/keystore"
+	"reflect"
 	"rtoken-swap/config"
 	"rtoken-swap/core"
 	"rtoken-swap/shared/bsc"
 	"time"
+
+	"github.com/stafiprotocol/chainbridge/utils/crypto/secp256k1"
+	"github.com/stafiprotocol/chainbridge/utils/keystore"
 
 	"github.com/ChainSafe/log15"
 )
@@ -33,26 +35,24 @@ func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*C
 	if !ok || len(subAccount) == 0 {
 		return nil, fmt.Errorf("no sub account")
 	}
-	bscEndpoint, ok := cfg.Opts[config.BscEndpointKey].(string)
-	if !ok || len(bscEndpoint) == 0 {
-		return nil, fmt.Errorf("bsc endpoint")
-	}
+
 	batchTransferAddress, ok := cfg.Opts[config.BatchTransferAddressKey].(string)
 	if !ok || len(batchTransferAddress) == 0 {
 		return nil, fmt.Errorf("no batchTransfer")
 	}
-
-	chainId, ok := cfg.Opts[config.ChainIdKey].(int64)
+	fmt.Println(cfg.Opts[config.ChainIdKey])
+	fmt.Println(reflect.TypeOf(cfg.Opts[config.ChainIdKey]))
+	chainId, ok := cfg.Opts[config.ChainIdKey].(float64)
 	if !ok || chainId == 0 {
 		return nil, errors.New("config must has chainId")
 	}
 
-	maxGasPrice, ok := cfg.Opts[config.MaxGasPriceKey].(int64)
+	maxGasPrice, ok := cfg.Opts[config.MaxGasPriceKey].(float64)
 	if !ok || maxGasPrice == 0 {
 		return nil, errors.New("config must has maxGasPrice")
 	}
 
-	gasLimit, ok := cfg.Opts[config.GasLimitKey].(int64)
+	gasLimit, ok := cfg.Opts[config.GasLimitKey].(float64)
 	if !ok || gasLimit == 0 {
 		return nil, errors.New("config must has gasLimit")
 	}
@@ -63,7 +63,7 @@ func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*C
 		return nil, err
 	}
 	kp, _ := kpI.(*secp256k1.Keypair)
-	poolClient, err := bsc.NewPoolClient(bscEndpoint, batchTransferAddress, kp, maxGasPrice, gasLimit, chainId)
+	poolClient, err := bsc.NewPoolClient(cfg.Endpoint, batchTransferAddress, kp, int64(maxGasPrice), int64(gasLimit), int64(chainId))
 	if err != nil {
 		return nil, err
 	}

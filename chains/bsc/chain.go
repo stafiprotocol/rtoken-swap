@@ -30,7 +30,7 @@ func InitializeChain(cfg *core.ChainConfig, logger log15.Logger, sysErr chan<- e
 	stop := make(chan int)
 	conn, err := NewConnection(cfg, logger, stop)
 	if err != nil {
-		return nil, fmt.Errorf("cosmos NewConnection err: %s", err)
+		return nil, fmt.Errorf("bnb NewConnection err: %s", err)
 	}
 
 	// Setup listener & writer

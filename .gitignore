@@ -43,3 +43,5 @@ config_stafi2.json
 config_stafi3.json
 config_dot.json
 config_dot2.json
+config_bnb.json
+blockstore/

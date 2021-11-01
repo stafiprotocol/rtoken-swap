@@ -13,9 +13,7 @@ import (
 	"rtoken-swap/models/submodel"
 
 	"github.com/ChainSafe/log15"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
-	"golang.org/x/crypto/sha3"
 )
 
 const msgLimit = 4096
@@ -92,10 +90,11 @@ func (w *writer) processNewTransInfos(m *core.Message) bool {
 		w.printContentError(m, errors.New("msg cast to traninfo not ok"))
 		return false
 	}
-	if transInfoList.DestSymbol != core.RATOM {
-		w.printContentError(m, errors.New("traninfo dest symbol != RATOM"))
+	if transInfoList.DestSymbol != core.RBNB {
+		w.printContentError(m, errors.New("traninfo dest symbol != RBNB"))
 		return false
 	}
+	w.log.Info("processNewTransInfos", "transInfo", transInfoList)
 	// check block is deal
 	isDeal, err := w.checkDeal(transInfoList.Block)
 	if err != nil {
@@ -132,6 +131,7 @@ func (w *writer) processNewTransInfos(m *core.Message) bool {
 		w.log.Error("batchTransfer.BatchTransfer failed", "err", err)
 		return false
 	}
+	w.log.Info("send batchTransfer", "gasPrice", tx.GasPrice().String(), "nonce", tx.Nonce(), "txHash", tx.Hash(), "gas", tx.Gas())
 	//check is confirmed
 	retry := 0
 	for {
@@ -150,7 +150,7 @@ func (w *writer) processNewTransInfos(m *core.Message) bool {
 		}
 	}
 
-	phash := getProposalHash(block, tos, values)
+	phash := GetProposalHash(block, tos, values)
 	retry = 0
 	for {
 		if retry > BlockRetryLimit {
@@ -166,7 +166,7 @@ func (w *writer) processNewTransInfos(m *core.Message) bool {
 			continue
 		}
 		if proposal.Status != 2 {
-			w.log.Warn("check proposal not exe yet ,watting...", " tatus ", proposal.Status)
+			w.log.Warn("check proposal not exe yet ,watting...", "status ", proposal.Status)
 			time.Sleep(BlockRetryInterval)
 			retry++
 			continue
@@ -187,7 +187,7 @@ func (w *writer) getLatestDealBLock(symbol core.RSymbol) (uint64, error) {
 		Symbol: symbol,
 		Block:  make(chan uint64, 1),
 	}
-	m := &core.Message{Source: core.RATOM, Destination: core.RFIS, Reason: core.GetLatestDealBLock, Content: &getLatestDealBlockParam}
+	m := &core.Message{Source: core.RBNB, Destination: core.FIS, Reason: core.GetLatestDealBLock, Content: &getLatestDealBlockParam}
 	subOk := w.submitReadMessage(m)
 	if !subOk {
 		return 0, fmt.Errorf("submitMessage err")
@@ -231,29 +231,4 @@ func transInfoListToStr(transInfoList *submodel.TransInfoList) string {
 		ret += line
 	}
 	return ret
-}
-
-var uint256Ty, _ = abi.NewType("uint256", "", nil)
-var addressListTy, _ = abi.NewType("address[]", "", nil)
-var uint256ListTy, _ = abi.NewType("uint256[]", "", nil)
-
-var proposalArguments = abi.Arguments{
-	{
-		Type: uint256Ty,
-	},
-	{
-		Type: addressListTy,
-	},
-	{
-		Type: uint256ListTy,
-	},
-}
-
-func getProposalHash(block *big.Int, tos []common.Address, values []*big.Int) [32]byte {
-	bytes, _ := proposalArguments.Pack(block, tos, values)
-	var buf [32]byte
-	hash := sha3.NewLegacyKeccak256()
-	hash.Write(bytes)
-	hash.Sum(buf[:])
-	return buf
 }

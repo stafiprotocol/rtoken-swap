@@ -149,7 +149,7 @@ func (l *listener) pollBlocks() error {
 func (l *listener) processTransInfos(infos *submodel.TransInfoList) error {
 
 	switch infos.DestSymbol {
-	case core.RATOM:
+	case core.RATOM, core.RBNB:
 		//check transinfo all not dealed or all dealed
 		allDeal := true
 		for _, transInfo := range infos.List {
@@ -233,7 +233,7 @@ func (l *listener) processTransInfos(infos *submodel.TransInfoList) error {
 // submitMessage send msg to other chain
 func (l *listener) submitWriteMessage(m *core.Message) error {
 	m.Source = l.symbol
-	if m.Destination == "" {
+	if len(m.Destination) == 0 {
 		m.Destination = l.care
 	}
 	return l.router.SendWriteMesage(m)

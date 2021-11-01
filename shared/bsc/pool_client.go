@@ -17,7 +17,7 @@ type PoolClient struct {
 	batchTransfer *BatchTransfer
 	kp            *secp256k1.Keypair
 	fromAddress   common.Address
-	maxGasPrice   int64
+	maxGasPrice   int64 //gwei
 	gasLimit      int64
 	chainId       int64
 }
@@ -61,8 +61,8 @@ func (p *PoolClient) GetTransactionOpts() (*bind.TransactOpts, error) {
 	if err != nil {
 		return nil, err
 	}
-	if suggestGasPrice.Cmp(big.NewInt(p.maxGasPrice)) > 0 {
-		suggestGasPrice = big.NewInt(p.maxGasPrice)
+	if suggestGasPrice.Cmp(big.NewInt(p.maxGasPrice*1e9)) > 0 {
+		suggestGasPrice = big.NewInt(p.maxGasPrice * 1e9)
 	}
 
 	opts := bind.TransactOpts{
