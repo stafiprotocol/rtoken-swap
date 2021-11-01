@@ -9,7 +9,7 @@ require (
 	github.com/ethereum/go-ethereum v1.10.6
 	github.com/gorilla/websocket v1.4.2
 	github.com/huandu/xstrings v1.3.2
-	github.com/itering/scale.go v1.1.35
+	github.com/itering/scale.go v1.1.37
 	github.com/itering/substrate-api-rpc v0.3.5
 	github.com/mr-tron/base58 v1.2.0
 	github.com/shopspring/decimal v1.3.1
@@ -23,7 +23,7 @@ require (
 	github.com/tendermint/tendermint v0.34.9
 	github.com/urfave/cli/v2 v2.3.0
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
-	golang.org/x/sys v0.0.0-20211029165221-6e7872819dc8 // indirect
+	golang.org/x/sys v0.0.0-20211031064116-611d5d643895 // indirect
 	gotest.tools v2.2.0+incompatible
 )
 
