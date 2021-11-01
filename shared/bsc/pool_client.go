@@ -18,11 +18,10 @@ type PoolClient struct {
 	kp            *secp256k1.Keypair
 	fromAddress   common.Address
 	maxGasPrice   int64 //gwei
-	gasLimit      int64
 	chainId       int64
 }
 
-func NewPoolClient(ethApi, batchTransferAddress string, kp *secp256k1.Keypair, maxGasPrice, gasLimit, chainId int64) (*PoolClient, error) {
+func NewPoolClient(ethApi, batchTransferAddress string, kp *secp256k1.Keypair, maxGasPrice, chainId int64) (*PoolClient, error) {
 	ethClient, err := ethclient.Dial(ethApi)
 	if err != nil {
 		return nil, err
@@ -38,7 +37,6 @@ func NewPoolClient(ethApi, batchTransferAddress string, kp *secp256k1.Keypair, m
 		batchTransfer: batchTransfer,
 		kp:            kp,
 		maxGasPrice:   maxGasPrice,
-		gasLimit:      gasLimit,
 		chainId:       chainId,
 		fromAddress:   kp.CommonAddress(),
 	}
@@ -71,7 +69,6 @@ func (p *PoolClient) GetTransactionOpts() (*bind.TransactOpts, error) {
 			return signTx(tx, p.kp.PrivateKey(), big.NewInt(p.chainId))
 		},
 		GasPrice: suggestGasPrice,
-		GasLimit: uint64(p.gasLimit),
 		Context:  context.Background(),
 	}
 

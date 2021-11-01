@@ -19,7 +19,6 @@ const (
 	MultisigAccountKey      = "multisigAccount"
 	SubAccountKey           = "subAccount"
 	BatchTransferAddressKey = "batchTransferAddress"
-	GasLimitKey             = "gasLimit"
 	MaxGasPriceKey          = "maxGasPrice"
 	OtherSubAccountsKey     = "otherSubAccounts"
 	PayerAccountKey         = "payerAccount"

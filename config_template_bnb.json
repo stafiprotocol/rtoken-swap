@@ -22,8 +22,7 @@
         "subAccount": "0xE2Dc25Cbf196C276CcbB7fa003EC6F499e3067Ae",
         "batchTransferAddress": "0x23FdF1573fC0604af791696C31F5FF8Fc508A25a",
         "chainId": 97,
-        "maxGasPrice": 30,
-        "gasLimit": 1000000
+        "maxGasPrice": 30
       }
     }
   ]

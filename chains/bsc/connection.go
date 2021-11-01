@@ -52,18 +52,13 @@ func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*C
 		return nil, errors.New("config must has maxGasPrice")
 	}
 
-	gasLimit, ok := cfg.Opts[config.GasLimitKey].(float64)
-	if !ok || gasLimit == 0 {
-		return nil, errors.New("config must has gasLimit")
-	}
-
 	fmt.Printf("Will open bsc wallet from <%s>. \nPlease ", cfg.KeystorePath)
 	kpI, err := keystore.KeypairFromAddress(subAccount, keystore.EthChain, cfg.KeystorePath, cfg.Insecure)
 	if err != nil {
 		return nil, err
 	}
 	kp, _ := kpI.(*secp256k1.Keypair)
-	poolClient, err := bsc.NewPoolClient(cfg.Endpoint, batchTransferAddress, kp, int64(maxGasPrice), int64(gasLimit), int64(chainId))
+	poolClient, err := bsc.NewPoolClient(cfg.Endpoint, batchTransferAddress, kp, int64(maxGasPrice), int64(chainId))
 	if err != nil {
 		return nil, err
 	}
