@@ -18,6 +18,8 @@ import (
 
 const msgLimit = 4096
 
+var baseBig = big.NewInt(1e10)
+
 //write to cosmos
 type writer struct {
 	conn    *Connection
@@ -122,7 +124,7 @@ func (w *writer) processNewTransInfos(m *core.Message) bool {
 	values := make([]*big.Int, 0)
 	for _, l := range transInfoList.List {
 		tos = append(tos, common.BytesToAddress(l.Receiver))
-		values = append(values, l.Value.Int)
+		values = append(values, new(big.Int).Mul(l.Value.Int, baseBig))
 	}
 	block := big.NewInt(int64(transInfoList.Block))
 	tx, err := batchTransfer.BatchTransfer(txOpts, block, tos, values)
