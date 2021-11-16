@@ -138,7 +138,7 @@ func (w *writer) processNewTransInfos(m *core.Message) bool {
 		ProposalId: substrateTypes.NewBytes(proposalId),
 		Signature:  substrateTypes.NewBytes(sigBts),
 	}
-	result := &core.Message{Source: core.RATOM, Destination: core.RFIS, Reason: core.SubmitSignature, Content: &param}
+	result := &core.Message{Source: core.RATOM, Destination: core.FIS, Reason: core.SubmitSignature, Content: &param}
 	subSignatureOk := w.submitWriteMessage(result)
 	if !subSignatureOk {
 		w.log.Error("processNewTransInfos SignMultiSigRawTx failed",
@@ -197,7 +197,7 @@ func (w *writer) getSubmitSignature(symbol core.RSymbol, block uint64, proposalI
 		ProposalId: proposalId,
 		Signatures: make(chan []substrateTypes.Bytes, 1),
 	}
-	m := &core.Message{Source: core.RATOM, Destination: core.RFIS, Reason: core.GetSignatures, Content: &getSigsParam}
+	m := &core.Message{Source: core.RATOM, Destination: core.FIS, Reason: core.GetSignatures, Content: &getSigsParam}
 	subOk := w.submitReadMessage(m)
 	if !subOk {
 		return nil, fmt.Errorf("submitMessage err")
