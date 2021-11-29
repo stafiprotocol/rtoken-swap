@@ -1,0 +1,29 @@
+{
+  "chains": [
+    {
+      "name": "stafix",
+      "rsymbol": "FIS",
+      "endpoint": "ws://127.0.0.1:9944",
+      "keystorePath": "/Users/tpkeeper/gowork/stafi/rtoken-swap/keys",
+      "care": "RMATIC",
+      "opts": {
+        "blockstorePath": "/Users/tpkeeper/gowork/stafi/rtoken-swap/blockstore",
+        "payerAccount": "35arN8keEJhSeSnpyH9Cu6CBsmGchGgJi577CxHyPUuobUhg",
+        "typesPath": "/Users/tpkeeper/gowork/stafi/rtoken-swap/network/stafi.json",
+        "startBlock": "0"
+      }
+    },
+    {
+      "name": "matic",
+      "rsymbol": "RMATIC",
+      "endpoint": "https://data-seed-prebsc-1-s1.binance.org:8545",
+      "keystorePath": "/Users/tpkeeper/gowork/stafi/rtoken-swap/keys",
+      "opts": {
+        "subAccount": "0xE2Dc25Cbf196C276CcbB7fa003EC6F499e3067Ae",
+        "batchTransferAddress": "0x23FdF1573fC0604af791696C31F5FF8Fc508A25a",
+        "chainId": 97,
+        "maxGasPrice": 30
+      }
+    }
+  ]
+}

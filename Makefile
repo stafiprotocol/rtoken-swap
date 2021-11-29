@@ -62,8 +62,8 @@ test:
 
 abigen:
 	@echo "  >  \033[32mabigen...\033[0m "
-	rm ./shared/bnb/batch_transfer.go
-	abigen --abi ./shared/bnb/batchTransfer.json --pkg bnb --type BatchTransfer --out ./shared/bnb/batch_transfer.go
+	abigen --abi ./shared/bsc/batchTransfer.json --pkg bsc --type BatchTransfer --out ./shared/bsc/batch_transfer.go
+	abigen --abi ./shared/matic/batchTransfer.json --pkg matic --type BatchTransfer --out ./shared/matic/batch_transfer.go
 
 clean:
 	rm -rf build/

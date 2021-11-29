@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"rtoken-swap/chains/bsc"
+	"rtoken-swap/chains/matic"
 	"rtoken-swap/chains/cosmos"
 	"rtoken-swap/chains/substrate"
 
@@ -151,6 +152,11 @@ func run(ctx *cli.Context) error {
 			}
 		case "bnb":
 			newChain, err = bsc.InitializeChain(chainConfig, logger, sysErr)
+			if err != nil {
+				return err
+			}
+		case "matic":
+			newChain, err = matic.InitializeChain(chainConfig, logger, sysErr)
 			if err != nil {
 				return err
 			}
