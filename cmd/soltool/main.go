@@ -57,16 +57,13 @@ var initCommand = cli.Command{
 }
 
 type PoolAccounts struct {
-	KeystorePath          string   `json:"keystorePath"`
-	FeeAccount            string   `json:"feeAccount"`
-	StakeBaseAccount      string   `json:"stakeBaseAccount"`
-	MultisigTxBaseAccount string   `json:"multisigTxBaseAccount"`
-	MultisigInfoPubkey    string   `json:"multisigInfoPubkey"`
-	MultisigProgramId     string   `json:"multisigProgramId"`
-	Endpoint              string   `json:"endpoint"`
-	OtherFeeAccount       []string `json:"otherFeeAccount"`
-	Threshold             int64    `json:"threshold"`
-	Validator             string   `json:"validator"`
+	KeystorePath        string   `json:"keystorePath"`
+	FeeAccount          string   `json:"feeAccount"`
+	MultisigInfoAccount string   `json:"multisigInfoAccount"`
+	MultisigProgramId   string   `json:"multisigProgramId"`
+	Endpoint            string   `json:"endpoint"`
+	OtherFeePubkey      []string `json:"otherFeePubkey"`
+	Threshold           int64    `json:"threshold"`
 }
 
 func loadConfig(file string, config *PoolAccounts) (err error) {

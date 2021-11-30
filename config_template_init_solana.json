@@ -1,0 +1,12 @@
+{
+    "keystorePath": "/Users/tpkeeper/gowork/stafi/rtoken-relay/keys/solana-vault.json",
+    "feeAccount": "D2Qux8umtJ6VAaBuLfDPi9VyHBHhiEB1dKhPKFocKg6q",
+    "multisigInfoAccount": "EL56ZS43MXghYvvjvk9wXqEWZeA9eJ8gpmGPLnrB81Nk",
+    "multisigProgramId": "G6ZS2HHHG8sbzTgx6QxbXLLmDLRXvAZuxi5vz8PQ9HF4",
+    "endpoint": "https://api.devnet.solana.com",
+    "otherFeePubkey": [
+        "9t2Lcij5eGjKN6xPnJkvvM87tyT7QXQ2P5EJyQF7t4jP",
+        "H92d4fR7Jdcxag7JCUAhBKAhnxiS6sWcKhxADLk4dERU"
+    ],
+    "threshold": 2
+}
