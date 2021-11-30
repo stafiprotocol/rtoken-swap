@@ -16,12 +16,12 @@
     {
       "name": "matic",
       "rsymbol": "RMATIC",
-      "endpoint": "https://data-seed-prebsc-1-s1.binance.org:8545",
+      "endpoint": "https://rpc-mumbai.maticvigil.com",
       "keystorePath": "/Users/tpkeeper/gowork/stafi/rtoken-swap/keys",
       "opts": {
-        "subAccount": "0xE2Dc25Cbf196C276CcbB7fa003EC6F499e3067Ae",
-        "batchTransferAddress": "0x23FdF1573fC0604af791696C31F5FF8Fc508A25a",
-        "chainId": 97,
+        "subAccount": "0xA96577dA157b173618bd7420005a14F73cb0e294",
+        "batchTransferAddress": "0x5dAd652f5DB00B56f17e26fea71Ed9D1E0696F94",
+        "chainId": 80001,
         "maxGasPrice": 30
       }
     }

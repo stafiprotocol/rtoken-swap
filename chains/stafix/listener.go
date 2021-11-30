@@ -149,7 +149,7 @@ func (l *listener) pollBlocks() error {
 func (l *listener) processTransInfos(infos *submodel.TransInfoList) error {
 
 	switch infos.DestSymbol {
-	case core.RATOM, core.RBNB:
+	case core.RATOM, core.RBNB, core.RMATIC:
 		//check transinfo all not dealed or all dealed
 		allDeal := true
 		for _, transInfo := range infos.List {
@@ -179,10 +179,10 @@ func (l *listener) processTransInfos(infos *submodel.TransInfoList) error {
 			}
 			isDeal, err := l.conn.TransInfoIsDeal(infos.DestSymbol, infos.Block, 0)
 			if err == nil && isDeal {
-				l.log.Info("TransInfoSingle has deal", "symbol", infos.DestSymbol, "block", infos.Block, "index", 0)
+				l.log.Info("TransInfo has deal", "symbol", infos.DestSymbol, "block", infos.Block, "index", 0)
 				break
 			}
-			l.log.Warn("TransInfoSingle still not deal, will wait...", "symbol", infos.DestSymbol, "block", infos.Block, "index", 0)
+			l.log.Warn("TransInfo still not deal, will wait...", "symbol", infos.DestSymbol, "block", infos.Block, "index", 0)
 			retry++
 			time.Sleep(BlockRetryInterval)
 		}

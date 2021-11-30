@@ -18,7 +18,7 @@ import (
 
 const msgLimit = 4096
 
-var baseBig = big.NewInt(1e10)
+var baseBig = big.NewInt(1)
 
 //write to cosmos
 type writer struct {
