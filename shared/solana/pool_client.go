@@ -15,12 +15,13 @@ type PoolClient struct {
 }
 
 type PoolAccounts struct {
-	FeeAccount            solTypes.Account
-	StakeBaseAccount      solTypes.Account
-	MultisigTxBaseAccount solTypes.Account
-	MultisigInfoPubkey    solCommon.PublicKey
-	MultisignerPubkey     solCommon.PublicKey
-	MultisigProgramId     solCommon.PublicKey
+	FeeAccount                  solTypes.Account
+	MultisigTxBaseAccount       *solTypes.Account
+	MultisigTxBaseAccountPubkey solCommon.PublicKey
+	MultisigInfoPubkey          solCommon.PublicKey
+	MultisignerPubkey           solCommon.PublicKey
+	MultisigProgramId           solCommon.PublicKey
+	HasBaseAccountAuth          bool
 }
 
 func NewPoolClient(log log15.Logger, rpcClient *solClient.Client, poolAccount PoolAccounts) *PoolClient {

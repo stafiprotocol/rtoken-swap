@@ -7,8 +7,9 @@ import (
 	"strconv"
 
 	"rtoken-swap/chains/bsc"
-	"rtoken-swap/chains/matic"
 	"rtoken-swap/chains/cosmos"
+	"rtoken-swap/chains/matic"
+	"rtoken-swap/chains/solana"
 	"rtoken-swap/chains/substrate"
 
 	"rtoken-swap/chains/stafix"
@@ -157,6 +158,11 @@ func run(ctx *cli.Context) error {
 			}
 		case "matic":
 			newChain, err = matic.InitializeChain(chainConfig, logger, sysErr)
+			if err != nil {
+				return err
+			}
+		case "solana":
+			newChain, err = solana.InitializeChain(chainConfig, logger, sysErr)
 			if err != nil {
 				return err
 			}

@@ -30,6 +30,11 @@ const (
 	ThresholdKey            = "threshold"
 	StartBlockKey           = "startBlock"
 	LatestBLockFlagKey      = "latestBlockFlog"
+
+	FeeAccountFlagKey            = "feeAccount"
+	MultisigTxBaseAccountFlagKey = "multisigTxBaseAccount"
+	MultisigInfoPubkeyFlagKey    = "multisigInfoPubkey"
+	MultisigProgramIdFlagKey     = "multisigProgramId"
 )
 
 type Config struct {

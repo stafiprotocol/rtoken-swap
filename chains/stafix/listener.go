@@ -149,7 +149,7 @@ func (l *listener) pollBlocks() error {
 func (l *listener) processTransInfos(infos *submodel.TransInfoList) error {
 
 	switch infos.DestSymbol {
-	case core.RATOM, core.RBNB, core.RMATIC:
+	case core.RATOM, core.RBNB, core.RMATIC, core.RSOL:
 		//check transinfo all not dealed or all dealed
 		allDeal := true
 		for _, transInfo := range infos.List {
