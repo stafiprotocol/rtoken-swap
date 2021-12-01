@@ -70,6 +70,7 @@ func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*C
 	if err != nil {
 		return nil, err
 	}
+	log.Info("multisignerPubkey", "pubkey", multisignerPubkey.ToBase58())
 
 	//collect privkey
 	pubKeyStrToPrivKey := make(map[string]vault.PrivateKey)

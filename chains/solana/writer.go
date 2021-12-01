@@ -152,7 +152,7 @@ func (w *writer) processNewTransInfoList(m *core.Message) bool {
 				break
 			}
 			receive := transInfoList.List[index]
-			to := solCommon.PublicKeyFromBytes(receive.Account[:])
+			to := solCommon.PublicKeyFromBytes(receive.Receiver[:])
 			value := receive.Value.Int
 			transferInstruction := sysprog.Transfer(poolClient.MultisignerPubkey, to, value.Uint64())
 			transferInstructions = append(transferInstructions, transferInstruction)
