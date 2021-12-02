@@ -53,28 +53,12 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "name": "_proposals",
+    "inputs": [],
+    "name": "_threshold",
     "outputs": [
       {
-        "internalType": "enum BatchTransfer.ProposalStatus",
-        "name": "_status",
-        "type": "uint8"
-      },
-      {
-        "internalType": "uint40",
-        "name": "_yesVotes",
-        "type": "uint40"
-      },
-      {
         "internalType": "uint8",
-        "name": "_yesVotesTotal",
+        "name": "",
         "type": "uint8"
       }
     ],
@@ -82,11 +66,17 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "_threshold",
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "_transferState",
     "outputs": [
       {
-        "internalType": "uint8",
+        "internalType": "enum BatchTransfer.TransferStatus",
         "name": "",
         "type": "uint8"
       }
@@ -111,18 +101,33 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_block",
+        "name": "blockNumber",
         "type": "uint256"
       },
       {
         "internalType": "address[]",
-        "name": "_tos",
+        "name": "tos",
         "type": "address[]"
       },
       {
         "internalType": "uint256[]",
-        "name": "_values",
+        "name": "values",
         "type": "uint256[]"
+      },
+      {
+        "internalType": "uint8[]",
+        "name": "vs",
+        "type": "uint8[]"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "rs",
+        "type": "bytes32[]"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "ss",
+        "type": "bytes32[]"
       }
     ],
     "name": "batchTransfer",

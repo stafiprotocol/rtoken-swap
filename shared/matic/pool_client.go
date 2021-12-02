@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/stafiprotocol/chainbridge/utils/crypto/secp256k1"
 )
@@ -89,4 +90,8 @@ func signTx(rawTx *types.Transaction, privateKey *ecdsa.PrivateKey, chainId *big
 	// Sign the transaction and verify the sender to avoid hardware fault surprises
 	signedTx, err = types.SignTx(rawTx, types.NewEIP155Signer(chainId), privateKey)
 	return
+}
+
+func (p *PoolClient) Sign(digestHash []byte) (sig []byte, err error) {
+	return crypto.Sign(digestHash, p.kp.PrivateKey())
 }

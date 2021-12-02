@@ -26,6 +26,7 @@ type Connection struct {
 	poolClient *matic.PoolClient
 	log        log15.Logger
 	stop       <-chan int
+	threshold  int
 }
 
 func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*Connection, error) {
@@ -39,6 +40,11 @@ func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*C
 	if !ok || len(batchTransferAddress) == 0 {
 		return nil, fmt.Errorf("no batchTransfer")
 	}
+	threshold, ok := cfg.Opts[config.ThresholdKey].(float64)
+	if !ok || threshold == 0 {
+		return nil, errors.New("config must has threshold")
+	}
+
 	chainId, ok := cfg.Opts[config.ChainIdKey].(float64)
 	if !ok || chainId == 0 {
 		return nil, errors.New("config must has chainId")
@@ -65,6 +71,7 @@ func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*C
 		log:        log,
 		stop:       stop,
 		poolClient: poolClient,
+		threshold:  int(threshold),
 	}, nil
 }
 

@@ -21,6 +21,7 @@
       "opts": {
         "subAccount": "0xA96577dA157b173618bd7420005a14F73cb0e294",
         "batchTransferAddress": "0x5dAd652f5DB00B56f17e26fea71Ed9D1E0696F94",
+        "threshold": 1,
         "chainId": 80001,
         "maxGasPrice": 30
       }

@@ -11,9 +11,11 @@ import (
 	"rtoken-swap/chains"
 	"rtoken-swap/core"
 	"rtoken-swap/models/submodel"
+	"rtoken-swap/utils"
 
 	"github.com/ChainSafe/log15"
 	"github.com/ethereum/go-ethereum/common"
+	substrateTypes "github.com/stafiprotocol/go-substrate-rpc-client/types"
 )
 
 const msgLimit = 4096
@@ -127,48 +129,125 @@ func (w *writer) processNewTransInfos(m *core.Message) bool {
 		values = append(values, new(big.Int).Mul(l.Value.Int, baseBig))
 	}
 	block := big.NewInt(int64(transInfoList.Block))
-	tx, err := batchTransfer.BatchTransfer(txOpts, block, tos, values)
-	//todo check already exe err
+
+	proposalId := GetProposalHash(block, tos, values)
+	sigBts, err := poolClient.Sign(proposalId[:])
 	if err != nil {
-		w.log.Error("batchTransfer.BatchTransfer failed", "err", err)
+		w.log.Error("poolClient.Sign failed", "err", err)
 		return false
 	}
-	w.log.Info("send batchTransfer", "gasPrice", tx.GasPrice().String(), "nonce", tx.Nonce(), "txHash", tx.Hash(), "gas", tx.Gas())
-	//check is confirmed
+	proposalIdHexStr := hex.EncodeToString(proposalId[:])
+
+	param := submodel.SubmitSignatureParams{
+		Symbol:     w.conn.symbol,
+		Block:      substrateTypes.NewU64(transInfoList.Block),
+		ProposalId: substrateTypes.NewBytes(proposalId[:]),
+		Signature:  substrateTypes.NewBytes(sigBts),
+	}
+	result := &core.Message{Source: core.RMATIC, Destination: core.FIS, Reason: core.SubmitSignature, Content: &param}
+	subSignatureOk := w.submitWriteMessage(result)
+	if !subSignatureOk {
+		w.log.Error("processNewTransInfos SignMultiSigRawTx failed",
+			"transfer block", transInfoList.Block,
+			"proposalId", proposalIdHexStr,
+			"err", err)
+		return false
+	}
+
+	w.log.Info("processNewTransInfos submitSignature",
+		"transfer block", transInfoList.Block,
+		"proposalId", proposalIdHexStr)
+
+	var sigs [][]byte
+	for {
+		// check block is deal
+		isDeal, err := w.checkDeal(transInfoList.Block)
+		if err != nil {
+			w.log.Error("checkDeal failed", "err", err)
+			return false
+		}
+		if isDeal {
+			w.log.Info("block has deal ", "block", transInfoList.Block)
+			return true
+		}
+		sigs, err = w.getSubmitSignature(w.conn.symbol, transInfoList.Block, proposalId[:])
+		if err != nil {
+			w.log.Warn("getSubmitSignature failed", "err", err)
+			time.Sleep(BlockRetryInterval)
+			continue
+		}
+		if len(sigs) < w.conn.threshold {
+			w.log.Warn("getSubmitSignature sigs not enough yet", "num", len(sigs), "need", w.conn.threshold)
+			time.Sleep(BlockRetryInterval)
+			continue
+		}
+		break
+	}
+
+	selectIndex := transInfoList.Block % uint64(w.conn.threshold)
+
+	var accountIndex *big.Int
 	retry := 0
 	for {
 		if retry > BlockRetryLimit {
-			w.log.Error("check BatchTransfer tx reach retry", "tx", tx.Hash(), "fromAddress", poolClient.GetFromAddress().String())
+			w.log.Error("batchTransfer.GetSubAccountIndex", "proposal", hex.EncodeToString(proposalId[:]), "fromAddress", poolClient.GetFromAddress().String())
 			return false
 		}
-		_, isPending, err := ethClient.TransactionByHash(context.Background(), tx.Hash())
-		if err == nil && !isPending {
-			break
-		} else {
-			w.log.Warn("check BatchTransfer tx failed ,watting...", " isPending ", isPending, " err ", err)
+
+		accountIndex, err = batchTransfer.GetSubAccountIndex(callOpts, poolClient.GetFromAddress())
+		if err != nil {
+			w.log.Warn("batchTransfer.GetSubAccountIndex, will retry", "err", err)
 			time.Sleep(BlockRetryInterval)
 			retry++
 			continue
 		}
+		break
 	}
 
-	phash := GetProposalHash(block, tos, values)
+	if selectIndex+1 == accountIndex.Uint64() {
+		vs, rs, ss := utils.DecomposeSignature(sigs)
+		tx, err := batchTransfer.BatchTransfer(txOpts, block, tos, values, vs, rs, ss)
+		//todo check already exe err
+		if err != nil {
+			w.log.Error("batchTransfer.BatchTransfer failed", "err", err)
+			return false
+		}
+		w.log.Info("send batchTransfer", "gasPrice", tx.GasPrice().String(), "nonce", tx.Nonce(), "txHash", tx.Hash(), "gas", tx.Gas())
+		//check is confirmed
+		retry := 0
+		for {
+			if retry > BlockRetryLimit {
+				w.log.Error("check BatchTransfer tx reach retry", "tx", tx.Hash(), "fromAddress", poolClient.GetFromAddress().String())
+				return false
+			}
+			_, isPending, err := ethClient.TransactionByHash(context.Background(), tx.Hash())
+			if err == nil && !isPending {
+				break
+			} else {
+				w.log.Warn("check BatchTransfer tx failed ,watting...", " isPending ", isPending, " err ", err)
+				time.Sleep(BlockRetryInterval)
+				retry++
+				continue
+			}
+		}
+	}
+
 	retry = 0
 	for {
-		if retry > BlockRetryLimit {
-			w.log.Error("check proposal reach retry", "proposal", hex.EncodeToString(phash[:]), "fromAddress", poolClient.GetFromAddress().String())
+		if retry > BlockRetryLimit*2 {
+			w.log.Error("check proposal reach retry", "proposal", hex.EncodeToString(proposalId[:]), "fromAddress", poolClient.GetFromAddress().String())
 			return false
 		}
 
-		proposal, err := batchTransfer.Proposals(callOpts, phash)
+		proposalStatus, err := batchTransfer.TransferState(callOpts, proposalId)
 		if err != nil {
 			w.log.Warn("check proposal failed ,watting...", " err ", err)
 			time.Sleep(BlockRetryInterval)
 			retry++
 			continue
 		}
-		if proposal.Status != 2 {
-			w.log.Warn("check proposal not exe yet ,watting...", "status ", proposal.Status)
+		if proposalStatus != 1 {
+			w.log.Warn("check proposal not exe yet ,watting...", "status ", proposalStatus)
 			time.Sleep(BlockRetryInterval)
 			retry++
 			continue
@@ -233,4 +312,31 @@ func transInfoListToStr(transInfoList *submodel.TransInfoList) string {
 		ret += line
 	}
 	return ret
+}
+
+func (w *writer) getSubmitSignature(symbol core.RSymbol, block uint64, proposalId []byte) ([][]byte, error) {
+	getSigsParam := submodel.GetSignaturesParam{
+		Symbol:     symbol,
+		Block:      block,
+		ProposalId: proposalId,
+		Signatures: make(chan []substrateTypes.Bytes, 1),
+	}
+	m := &core.Message{Source: core.RATOM, Destination: core.FIS, Reason: core.GetSignatures, Content: &getSigsParam}
+	subOk := w.submitReadMessage(m)
+	if !subOk {
+		return nil, fmt.Errorf("submitMessage err")
+	}
+
+	ticker := time.NewTicker(time.Second * 20)
+	defer ticker.Stop()
+	select {
+	case <-ticker.C:
+		return nil, fmt.Errorf("time out")
+	case sigs := <-getSigsParam.Signatures:
+		ret := make([][]byte, 0)
+		for _, sig := range sigs {
+			ret = append(ret, []byte(sig))
+		}
+		return ret, nil
+	}
 }

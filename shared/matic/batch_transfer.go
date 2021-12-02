@@ -27,7 +27,7 @@ var (
 )
 
 // BatchTransferABI is the input ABI used to generate the binding from.
-const BatchTransferABI = "[{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"initialSubAccounts\",\"type\":\"address[]\"},{\"internalType\":\"uint256\",\"name\":\"initialThreshold\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"erc20TokenAddress\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"_erc20TokenAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"_proposals\",\"outputs\":[{\"internalType\":\"enumBatchTransfer.ProposalStatus\",\"name\":\"_status\",\"type\":\"uint8\"},{\"internalType\":\"uint40\",\"name\":\"_yesVotes\",\"type\":\"uint40\"},{\"internalType\":\"uint8\",\"name\":\"_yesVotesTotal\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"_threshold\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"subAccount\",\"type\":\"address\"}],\"name\":\"addSubAccount\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_block\",\"type\":\"uint256\"},{\"internalType\":\"address[]\",\"name\":\"_tos\",\"type\":\"address[]\"},{\"internalType\":\"uint256[]\",\"name\":\"_values\",\"type\":\"uint256[]\"}],\"name\":\"batchTransfer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"erc20TokenAddress\",\"type\":\"address\"}],\"name\":\"changeErc20TokenAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"newThreshold\",\"type\":\"uint256\"}],\"name\":\"changeThreshold\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"subAccount\",\"type\":\"address\"}],\"name\":\"getSubAccountIndex\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"subAccount\",\"type\":\"address\"}],\"name\":\"removeSubAccount\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"withdraw\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]"
+const BatchTransferABI = "[{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"initialSubAccounts\",\"type\":\"address[]\"},{\"internalType\":\"uint256\",\"name\":\"initialThreshold\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"erc20TokenAddress\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"_erc20TokenAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"_threshold\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"_transferState\",\"outputs\":[{\"internalType\":\"enumBatchTransfer.TransferStatus\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"subAccount\",\"type\":\"address\"}],\"name\":\"addSubAccount\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"blockNumber\",\"type\":\"uint256\"},{\"internalType\":\"address[]\",\"name\":\"tos\",\"type\":\"address[]\"},{\"internalType\":\"uint256[]\",\"name\":\"values\",\"type\":\"uint256[]\"},{\"internalType\":\"uint8[]\",\"name\":\"vs\",\"type\":\"uint8[]\"},{\"internalType\":\"bytes32[]\",\"name\":\"rs\",\"type\":\"bytes32[]\"},{\"internalType\":\"bytes32[]\",\"name\":\"ss\",\"type\":\"bytes32[]\"}],\"name\":\"batchTransfer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"erc20TokenAddress\",\"type\":\"address\"}],\"name\":\"changeErc20TokenAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"newThreshold\",\"type\":\"uint256\"}],\"name\":\"changeThreshold\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"subAccount\",\"type\":\"address\"}],\"name\":\"getSubAccountIndex\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"subAccount\",\"type\":\"address\"}],\"name\":\"removeSubAccount\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"withdraw\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]"
 
 // BatchTransfer is an auto generated Go binding around an Ethereum contract.
 type BatchTransfer struct {
@@ -202,56 +202,6 @@ func (_BatchTransfer *BatchTransferCallerSession) Erc20TokenAddress() (common.Ad
 	return _BatchTransfer.Contract.Erc20TokenAddress(&_BatchTransfer.CallOpts)
 }
 
-// Proposals is a free data retrieval call binding the contract method 0xf2e2af94.
-//
-// Solidity: function _proposals(bytes32 ) view returns(uint8 _status, uint40 _yesVotes, uint8 _yesVotesTotal)
-func (_BatchTransfer *BatchTransferCaller) Proposals(opts *bind.CallOpts, arg0 [32]byte) (struct {
-	Status        uint8
-	YesVotes      *big.Int
-	YesVotesTotal uint8
-}, error) {
-	var out []interface{}
-	err := _BatchTransfer.contract.Call(opts, &out, "_proposals", arg0)
-
-	outstruct := new(struct {
-		Status        uint8
-		YesVotes      *big.Int
-		YesVotesTotal uint8
-	})
-	if err != nil {
-		return *outstruct, err
-	}
-
-	outstruct.Status = *abi.ConvertType(out[0], new(uint8)).(*uint8)
-	outstruct.YesVotes = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
-	outstruct.YesVotesTotal = *abi.ConvertType(out[2], new(uint8)).(*uint8)
-
-	return *outstruct, err
-
-}
-
-// Proposals is a free data retrieval call binding the contract method 0xf2e2af94.
-//
-// Solidity: function _proposals(bytes32 ) view returns(uint8 _status, uint40 _yesVotes, uint8 _yesVotesTotal)
-func (_BatchTransfer *BatchTransferSession) Proposals(arg0 [32]byte) (struct {
-	Status        uint8
-	YesVotes      *big.Int
-	YesVotesTotal uint8
-}, error) {
-	return _BatchTransfer.Contract.Proposals(&_BatchTransfer.CallOpts, arg0)
-}
-
-// Proposals is a free data retrieval call binding the contract method 0xf2e2af94.
-//
-// Solidity: function _proposals(bytes32 ) view returns(uint8 _status, uint40 _yesVotes, uint8 _yesVotesTotal)
-func (_BatchTransfer *BatchTransferCallerSession) Proposals(arg0 [32]byte) (struct {
-	Status        uint8
-	YesVotes      *big.Int
-	YesVotesTotal uint8
-}, error) {
-	return _BatchTransfer.Contract.Proposals(&_BatchTransfer.CallOpts, arg0)
-}
-
 // Threshold is a free data retrieval call binding the contract method 0x7f3c8160.
 //
 // Solidity: function _threshold() view returns(uint8)
@@ -281,6 +231,37 @@ func (_BatchTransfer *BatchTransferSession) Threshold() (uint8, error) {
 // Solidity: function _threshold() view returns(uint8)
 func (_BatchTransfer *BatchTransferCallerSession) Threshold() (uint8, error) {
 	return _BatchTransfer.Contract.Threshold(&_BatchTransfer.CallOpts)
+}
+
+// TransferState is a free data retrieval call binding the contract method 0x0de723c0.
+//
+// Solidity: function _transferState(bytes32 ) view returns(uint8)
+func (_BatchTransfer *BatchTransferCaller) TransferState(opts *bind.CallOpts, arg0 [32]byte) (uint8, error) {
+	var out []interface{}
+	err := _BatchTransfer.contract.Call(opts, &out, "_transferState", arg0)
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
+}
+
+// TransferState is a free data retrieval call binding the contract method 0x0de723c0.
+//
+// Solidity: function _transferState(bytes32 ) view returns(uint8)
+func (_BatchTransfer *BatchTransferSession) TransferState(arg0 [32]byte) (uint8, error) {
+	return _BatchTransfer.Contract.TransferState(&_BatchTransfer.CallOpts, arg0)
+}
+
+// TransferState is a free data retrieval call binding the contract method 0x0de723c0.
+//
+// Solidity: function _transferState(bytes32 ) view returns(uint8)
+func (_BatchTransfer *BatchTransferCallerSession) TransferState(arg0 [32]byte) (uint8, error) {
+	return _BatchTransfer.Contract.TransferState(&_BatchTransfer.CallOpts, arg0)
 }
 
 // GetSubAccountIndex is a free data retrieval call binding the contract method 0x763f8680.
@@ -366,25 +347,25 @@ func (_BatchTransfer *BatchTransferTransactorSession) AddSubAccount(subAccount c
 	return _BatchTransfer.Contract.AddSubAccount(&_BatchTransfer.TransactOpts, subAccount)
 }
 
-// BatchTransfer is a paid mutator transaction binding the contract method 0x7b5cbf50.
+// BatchTransfer is a paid mutator transaction binding the contract method 0x59b11f61.
 //
-// Solidity: function batchTransfer(uint256 _block, address[] _tos, uint256[] _values) returns()
-func (_BatchTransfer *BatchTransferTransactor) BatchTransfer(opts *bind.TransactOpts, _block *big.Int, _tos []common.Address, _values []*big.Int) (*types.Transaction, error) {
-	return _BatchTransfer.contract.Transact(opts, "batchTransfer", _block, _tos, _values)
+// Solidity: function batchTransfer(uint256 blockNumber, address[] tos, uint256[] values, uint8[] vs, bytes32[] rs, bytes32[] ss) returns()
+func (_BatchTransfer *BatchTransferTransactor) BatchTransfer(opts *bind.TransactOpts, blockNumber *big.Int, tos []common.Address, values []*big.Int, vs []uint8, rs [][32]byte, ss [][32]byte) (*types.Transaction, error) {
+	return _BatchTransfer.contract.Transact(opts, "batchTransfer", blockNumber, tos, values, vs, rs, ss)
 }
 
-// BatchTransfer is a paid mutator transaction binding the contract method 0x7b5cbf50.
+// BatchTransfer is a paid mutator transaction binding the contract method 0x59b11f61.
 //
-// Solidity: function batchTransfer(uint256 _block, address[] _tos, uint256[] _values) returns()
-func (_BatchTransfer *BatchTransferSession) BatchTransfer(_block *big.Int, _tos []common.Address, _values []*big.Int) (*types.Transaction, error) {
-	return _BatchTransfer.Contract.BatchTransfer(&_BatchTransfer.TransactOpts, _block, _tos, _values)
+// Solidity: function batchTransfer(uint256 blockNumber, address[] tos, uint256[] values, uint8[] vs, bytes32[] rs, bytes32[] ss) returns()
+func (_BatchTransfer *BatchTransferSession) BatchTransfer(blockNumber *big.Int, tos []common.Address, values []*big.Int, vs []uint8, rs [][32]byte, ss [][32]byte) (*types.Transaction, error) {
+	return _BatchTransfer.Contract.BatchTransfer(&_BatchTransfer.TransactOpts, blockNumber, tos, values, vs, rs, ss)
 }
 
-// BatchTransfer is a paid mutator transaction binding the contract method 0x7b5cbf50.
+// BatchTransfer is a paid mutator transaction binding the contract method 0x59b11f61.
 //
-// Solidity: function batchTransfer(uint256 _block, address[] _tos, uint256[] _values) returns()
-func (_BatchTransfer *BatchTransferTransactorSession) BatchTransfer(_block *big.Int, _tos []common.Address, _values []*big.Int) (*types.Transaction, error) {
-	return _BatchTransfer.Contract.BatchTransfer(&_BatchTransfer.TransactOpts, _block, _tos, _values)
+// Solidity: function batchTransfer(uint256 blockNumber, address[] tos, uint256[] values, uint8[] vs, bytes32[] rs, bytes32[] ss) returns()
+func (_BatchTransfer *BatchTransferTransactorSession) BatchTransfer(blockNumber *big.Int, tos []common.Address, values []*big.Int, vs []uint8, rs [][32]byte, ss [][32]byte) (*types.Transaction, error) {
+	return _BatchTransfer.Contract.BatchTransfer(&_BatchTransfer.TransactOpts, blockNumber, tos, values, vs, rs, ss)
 }
 
 // ChangeErc20TokenAddress is a paid mutator transaction binding the contract method 0x654fd3fd.
