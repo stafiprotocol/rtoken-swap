@@ -20,7 +20,7 @@
       "keystorePath": "/Users/tpkeeper/gowork/stafi/rtoken-swap/keys",
       "opts": {
         "subAccount": "0xA96577dA157b173618bd7420005a14F73cb0e294",
-        "batchTransferAddress": "0x5dAd652f5DB00B56f17e26fea71Ed9D1E0696F94",
+        "batchTransferAddress": "0xd5a38A8ba380459344F8bAA6ED7a8bB4C1BC72dF",
         "threshold": 1,
         "chainId": 80001,
         "maxGasPrice": 30
