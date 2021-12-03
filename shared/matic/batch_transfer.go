@@ -27,7 +27,7 @@ var (
 )
 
 // BatchTransferABI is the input ABI used to generate the binding from.
-const BatchTransferABI = "[{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"initialSubAccounts\",\"type\":\"address[]\"},{\"internalType\":\"uint256\",\"name\":\"initialThreshold\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"erc20TokenAddress\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"_erc20TokenAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"_threshold\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"_transferState\",\"outputs\":[{\"internalType\":\"enumBatchTransfer.TransferStatus\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"subAccount\",\"type\":\"address\"}],\"name\":\"addSubAccount\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"blockNumber\",\"type\":\"uint256\"},{\"internalType\":\"address[]\",\"name\":\"tos\",\"type\":\"address[]\"},{\"internalType\":\"uint256[]\",\"name\":\"values\",\"type\":\"uint256[]\"},{\"internalType\":\"uint8[]\",\"name\":\"vs\",\"type\":\"uint8[]\"},{\"internalType\":\"bytes32[]\",\"name\":\"rs\",\"type\":\"bytes32[]\"},{\"internalType\":\"bytes32[]\",\"name\":\"ss\",\"type\":\"bytes32[]\"}],\"name\":\"batchTransfer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"erc20TokenAddress\",\"type\":\"address\"}],\"name\":\"changeErc20TokenAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"newThreshold\",\"type\":\"uint256\"}],\"name\":\"changeThreshold\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"subAccount\",\"type\":\"address\"}],\"name\":\"getSubAccountIndex\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"subAccount\",\"type\":\"address\"}],\"name\":\"removeSubAccount\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"withdraw\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]"
+const BatchTransferABI = "[{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"initialSubAccounts\",\"type\":\"address[]\"},{\"internalType\":\"uint256\",\"name\":\"initialThreshold\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"erc20TokenAddress\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"_erc20TokenAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"_id\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"_threshold\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"_timestamp\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"_transferState\",\"outputs\":[{\"internalType\":\"enumBatchTransfer.TransferStatus\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"subAccount\",\"type\":\"address\"}],\"name\":\"addSubAccount\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"blockNumber\",\"type\":\"uint256\"},{\"internalType\":\"address[]\",\"name\":\"tos\",\"type\":\"address[]\"},{\"internalType\":\"uint256[]\",\"name\":\"values\",\"type\":\"uint256[]\"},{\"internalType\":\"uint8[]\",\"name\":\"vs\",\"type\":\"uint8[]\"},{\"internalType\":\"bytes32[]\",\"name\":\"rs\",\"type\":\"bytes32[]\"},{\"internalType\":\"bytes32[]\",\"name\":\"ss\",\"type\":\"bytes32[]\"}],\"name\":\"batchTransfer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"erc20TokenAddress\",\"type\":\"address\"}],\"name\":\"changeErc20TokenAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"newThreshold\",\"type\":\"uint256\"}],\"name\":\"changeThreshold\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"subAccount\",\"type\":\"address\"}],\"name\":\"getSubAccountIndex\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"subAccount\",\"type\":\"address\"}],\"name\":\"removeSubAccount\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"withdraw\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]"
 
 // BatchTransfer is an auto generated Go binding around an Ethereum contract.
 type BatchTransfer struct {
@@ -202,6 +202,37 @@ func (_BatchTransfer *BatchTransferCallerSession) Erc20TokenAddress() (common.Ad
 	return _BatchTransfer.Contract.Erc20TokenAddress(&_BatchTransfer.CallOpts)
 }
 
+// Id is a free data retrieval call binding the contract method 0x05180237.
+//
+// Solidity: function _id() view returns(uint256)
+func (_BatchTransfer *BatchTransferCaller) Id(opts *bind.CallOpts) (*big.Int, error) {
+	var out []interface{}
+	err := _BatchTransfer.contract.Call(opts, &out, "_id")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// Id is a free data retrieval call binding the contract method 0x05180237.
+//
+// Solidity: function _id() view returns(uint256)
+func (_BatchTransfer *BatchTransferSession) Id() (*big.Int, error) {
+	return _BatchTransfer.Contract.Id(&_BatchTransfer.CallOpts)
+}
+
+// Id is a free data retrieval call binding the contract method 0x05180237.
+//
+// Solidity: function _id() view returns(uint256)
+func (_BatchTransfer *BatchTransferCallerSession) Id() (*big.Int, error) {
+	return _BatchTransfer.Contract.Id(&_BatchTransfer.CallOpts)
+}
+
 // Threshold is a free data retrieval call binding the contract method 0x7f3c8160.
 //
 // Solidity: function _threshold() view returns(uint8)
@@ -231,6 +262,37 @@ func (_BatchTransfer *BatchTransferSession) Threshold() (uint8, error) {
 // Solidity: function _threshold() view returns(uint8)
 func (_BatchTransfer *BatchTransferCallerSession) Threshold() (uint8, error) {
 	return _BatchTransfer.Contract.Threshold(&_BatchTransfer.CallOpts)
+}
+
+// Timestamp is a free data retrieval call binding the contract method 0x669475b7.
+//
+// Solidity: function _timestamp() view returns(uint256)
+func (_BatchTransfer *BatchTransferCaller) Timestamp(opts *bind.CallOpts) (*big.Int, error) {
+	var out []interface{}
+	err := _BatchTransfer.contract.Call(opts, &out, "_timestamp")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// Timestamp is a free data retrieval call binding the contract method 0x669475b7.
+//
+// Solidity: function _timestamp() view returns(uint256)
+func (_BatchTransfer *BatchTransferSession) Timestamp() (*big.Int, error) {
+	return _BatchTransfer.Contract.Timestamp(&_BatchTransfer.CallOpts)
+}
+
+// Timestamp is a free data retrieval call binding the contract method 0x669475b7.
+//
+// Solidity: function _timestamp() view returns(uint256)
+func (_BatchTransfer *BatchTransferCallerSession) Timestamp() (*big.Int, error) {
+	return _BatchTransfer.Contract.Timestamp(&_BatchTransfer.CallOpts)
 }
 
 // TransferState is a free data retrieval call binding the contract method 0x0de723c0.

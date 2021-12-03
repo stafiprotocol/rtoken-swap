@@ -97,3 +97,49 @@ func GetProposalHash(block *big.Int, tos []common.Address, values []*big.Int) [3
 	copy(ret[:], retBuf)
 	return ret
 }
+
+func GetProposalHashWithTimestampChainId(timestamp, chainId, block *big.Int, tos []common.Address, values []*big.Int) [32]byte {
+	uint256Ty, err := abi.NewType("uint256", "uint256", nil)
+	if err != nil {
+		panic(err)
+	}
+	addressListTy, err := abi.NewType("address[]", "address[]", nil)
+	if err != nil {
+		panic(err)
+	}
+	uint256ListTy, err := abi.NewType("uint256[]", "uint256[]", nil)
+	if err != nil {
+		panic(err)
+	}
+	var proposalArguments = abi.Arguments{
+		{
+			Type: uint256Ty,
+		},
+		{
+			Type: uint256Ty,
+		},
+		{
+			Type: uint256Ty,
+		},
+		{
+			Type: addressListTy,
+		},
+		{
+			Type: uint256ListTy,
+		},
+	}
+
+	bytes, err := proposalArguments.Pack(timestamp, chainId, block, tos, values)
+	if err != nil {
+		panic(err)
+	}
+
+	var retBuf []byte
+	hash := sha3.NewLegacyKeccak256()
+	hash.Write(bytes)
+	retBuf = hash.Sum(retBuf)
+
+	var ret [32]byte
+	copy(ret[:], retBuf)
+	return ret
+}

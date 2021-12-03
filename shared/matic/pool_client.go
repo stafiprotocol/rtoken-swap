@@ -19,15 +19,20 @@ type PoolClient struct {
 	kp            *secp256k1.Keypair
 	fromAddress   common.Address
 	maxGasPrice   int64 //gwei
-	chainId       int64
+	ChainId       *big.Int
+	Timestamp     *big.Int
 }
 
-func NewPoolClient(ethApi, batchTransferAddress string, kp *secp256k1.Keypair, maxGasPrice, chainId int64) (*PoolClient, error) {
+func NewPoolClient(ethApi, batchTransferAddress string, kp *secp256k1.Keypair, maxGasPrice int64) (*PoolClient, error) {
 	ethClient, err := ethclient.Dial(ethApi)
 	if err != nil {
 		return nil, err
 	}
 
+	chainId, err := ethClient.ChainID(context.Background())
+	if err != nil {
+		return nil, err
+	}
 	batchTransfer, err := NewBatchTransfer(common.HexToAddress(batchTransferAddress), ethClient)
 	if err != nil {
 		return nil, err
@@ -38,9 +43,15 @@ func NewPoolClient(ethApi, batchTransferAddress string, kp *secp256k1.Keypair, m
 		batchTransfer: batchTransfer,
 		kp:            kp,
 		maxGasPrice:   maxGasPrice,
-		chainId:       chainId,
+		ChainId:       chainId,
 		fromAddress:   kp.CommonAddress(),
 	}
+	timestamp, err := batchTransfer.Timestamp(pool.GetCallOpts())
+	if err != nil {
+		return nil, err
+	}
+
+	pool.Timestamp = timestamp
 	return &pool, nil
 }
 
@@ -67,7 +78,7 @@ func (p *PoolClient) GetTransactionOpts() (*bind.TransactOpts, error) {
 	opts := bind.TransactOpts{
 		From: p.fromAddress,
 		Signer: func(addr common.Address, tx *types.Transaction) (*types.Transaction, error) {
-			return signTx(tx, p.kp.PrivateKey(), big.NewInt(p.chainId))
+			return signTx(tx, p.kp.PrivateKey(), p.ChainId)
 		},
 		GasPrice: suggestGasPrice,
 		Context:  context.Background(),

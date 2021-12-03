@@ -130,7 +130,7 @@ func (w *writer) processNewTransInfos(m *core.Message) bool {
 	}
 	block := big.NewInt(int64(transInfoList.Block))
 
-	proposalId := GetProposalHash(block, tos, values)
+	proposalId := GetProposalHashWithTimestampChainId(poolClient.Timestamp, poolClient.ChainId, block, tos, values)
 	sigBts, err := poolClient.Sign(proposalId[:])
 	if err != nil {
 		w.log.Error("poolClient.Sign failed", "err", err)

@@ -45,11 +45,6 @@ func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*C
 		return nil, errors.New("config must has threshold")
 	}
 
-	chainId, ok := cfg.Opts[config.ChainIdKey].(float64)
-	if !ok || chainId == 0 {
-		return nil, errors.New("config must has chainId")
-	}
-
 	maxGasPrice, ok := cfg.Opts[config.MaxGasPriceKey].(float64)
 	if !ok || maxGasPrice == 0 {
 		return nil, errors.New("config must has maxGasPrice")
@@ -61,7 +56,7 @@ func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*C
 		return nil, err
 	}
 	kp, _ := kpI.(*secp256k1.Keypair)
-	poolClient, err := matic.NewPoolClient(cfg.Endpoint, batchTransferAddress, kp, int64(maxGasPrice), int64(chainId))
+	poolClient, err := matic.NewPoolClient(cfg.Endpoint, batchTransferAddress, kp, int64(maxGasPrice))
 	if err != nil {
 		return nil, err
 	}
