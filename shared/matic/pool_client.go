@@ -23,6 +23,12 @@ type PoolClient struct {
 	Timestamp     *big.Int
 }
 
+var (
+	lowExtraGasPrice  = big.NewInt(5e9)
+	highExtraGasPrice = big.NewInt(10e9)
+	standGasPrice     = big.NewInt(20e9)
+)
+
 func NewPoolClient(ethApi, batchTransferAddress string, kp *secp256k1.Keypair, maxGasPrice int64) (*PoolClient, error) {
 	ethClient, err := ethclient.Dial(ethApi)
 	if err != nil {
@@ -71,6 +77,13 @@ func (p *PoolClient) GetTransactionOpts() (*bind.TransactOpts, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	if suggestGasPrice.Cmp(standGasPrice) > 0 {
+		suggestGasPrice = new(big.Int).Add(suggestGasPrice, highExtraGasPrice)
+	} else {
+		suggestGasPrice = new(big.Int).Add(suggestGasPrice, lowExtraGasPrice)
+	}
+
 	if suggestGasPrice.Cmp(big.NewInt(p.maxGasPrice*1e9)) > 0 {
 		suggestGasPrice = big.NewInt(p.maxGasPrice * 1e9)
 	}

@@ -21,12 +21,13 @@ const (
 )
 
 type Connection struct {
-	url        string
-	symbol     core.RSymbol
-	poolClient *matic.PoolClient
-	log        log15.Logger
-	stop       <-chan int
-	threshold  int
+	url             string
+	symbol          core.RSymbol
+	poolClient      *matic.PoolClient
+	log             log15.Logger
+	stop            <-chan int
+	threshold       int
+	totalSubAccount int
 }
 
 func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*Connection, error) {
@@ -43,6 +44,13 @@ func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*C
 	threshold, ok := cfg.Opts[config.ThresholdKey].(float64)
 	if !ok || threshold == 0 {
 		return nil, errors.New("config must has threshold")
+	}
+	totalSubAccount, ok := cfg.Opts[config.TotalSubAccount].(float64)
+	if !ok || totalSubAccount == 0 {
+		return nil, errors.New("config must has totalSubAccount")
+	}
+	if threshold > totalSubAccount {
+		return nil, errors.New("threshold must <= totalSubAccount")
 	}
 
 	maxGasPrice, ok := cfg.Opts[config.MaxGasPriceKey].(float64)
@@ -61,12 +69,13 @@ func NewConnection(cfg *core.ChainConfig, log log15.Logger, stop <-chan int) (*C
 		return nil, err
 	}
 	return &Connection{
-		url:        cfg.Endpoint,
-		symbol:     cfg.Symbol,
-		log:        log,
-		stop:       stop,
-		poolClient: poolClient,
-		threshold:  int(threshold),
+		url:             cfg.Endpoint,
+		symbol:          cfg.Symbol,
+		log:             log,
+		stop:            stop,
+		poolClient:      poolClient,
+		threshold:       int(threshold),
+		totalSubAccount: int(totalSubAccount),
 	}, nil
 }
 

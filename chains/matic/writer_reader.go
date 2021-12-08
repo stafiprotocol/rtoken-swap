@@ -184,7 +184,7 @@ func (w *writer) processNewTransInfos(m *core.Message) bool {
 		break
 	}
 
-	selectIndex := transInfoList.Block % uint64(w.conn.threshold)
+	selectIndex := transInfoList.Block % uint64(w.conn.totalSubAccount)
 
 	var accountIndex *big.Int
 	retry := 0

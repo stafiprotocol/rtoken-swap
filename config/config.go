@@ -28,6 +28,7 @@ const (
 	TypesPathKey            = "typesPath"
 	AddressTypeKey          = "addressType"
 	ThresholdKey            = "threshold"
+	TotalSubAccount         = "totalSubAccount"
 	StartBlockKey           = "startBlock"
 	LatestBLockFlagKey      = "latestBlockFlog"
 
